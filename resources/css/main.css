@@ -1,0 +1,397 @@
+
+/* متغيرات CSS قابلة للتعديل من مكان واحد */
+:root {
+    /* نظام الألوان الأساسي */
+    --color-primary: #4f46e5;
+    --color-primary-dark: #4338ca;
+    --color-secondary: #0ea5e9;
+    --color-success: #10b981;
+    --color-danger: #ef4444;
+    --color-warning: #f59e0b;
+    --color-dark: #1e293b;
+    --color-darker: #0f172a;
+    --color-light: #f1f5f9;
+    --color-lighter: #f8fafc;
+    --color-white: #ffffff;
+    --color-gray: #64748b;
+
+    /* ألوان الخلفيات والنصوص */
+    --bg-header: #0f172a;
+    --bg-sidebar: #1e293b;
+    --text-light: #f1f5f9;
+    --text-dark: #1e293b;
+
+    /* الخطوط */
+    --font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+    --font-size-base: 16px;
+    --font-weight-normal: 400;
+    --font-weight-bold: 600;
+
+    /* حدود وأشكال */
+    --border-radius: 12px;
+    --border-radius-sm: 6px;
+
+    /* تأثيرات */
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.1);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+    --transition-speed: 0.3s;
+}
+
+/* ===== نمط الزر العام (Button) ===== */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    font-family: var(--font-family);
+    font-size: 1rem;
+    font-weight: var(--font-weight-bold);
+    text-decoration: none;
+    cursor: pointer;
+    transition: all var(--transition-speed) ease;
+    background: var(--color-light);
+    color: var(--color-dark);
+    outline: none;
+}
+
+/* تحسين إمكانية الوصول: إظهار حدود التركيز بلون متباين */
+.btn:focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* تأثير المرور */
+.btn:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* الحالة النشطة */
+.btn:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+}
+
+/* الأزرار ذات الألوان الدلالية */
+.btn-primary {
+    background: var(--color-primary);
+    color: var(--color-white);
+}
+.btn-primary:hover {
+    background: var(--color-primary-dark);
+}
+
+.btn-success {
+    background: var(--color-success);
+    color: var(--color-white);
+}
+
+.btn-danger {
+    background: var(--color-danger);
+    color: var(--color-white);
+}
+
+.btn-warning {
+    background: var(--color-warning);
+    color: var(--color-white);
+}
+
+/* أحجام الأزرار */
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+}
+.btn-lg {
+    padding: 14px 28px;
+    font-size: 1.2rem;
+}
+
+/* ===== نمط الرابط العام (Link) ===== */
+a, .link {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: var(--font-weight-bold);
+    transition: color var(--transition-speed) ease;
+}
+a:hover, .link:hover {
+    color: var(--color-primary-dark);
+    text-decoration: underline;
+}
+a:focus-visible, .link:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+/* الروابط التي تأخذ شكل أزرار (تستخدم كلاس btn معا) */
+a.btn {
+    text-decoration: none;
+    color: inherit;
+}
+/* === إعادة تعيين القيم الأساسية === */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--color-lighter);
+    color: var(--text-dark);
+    line-height: 1.6;
+    direction: rtl; /* دعم اللغة العربية */
+    overflow-x: hidden;
+}
+
+/* ===== الشريط العلوي الثابت ===== */
+.main-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 70px;
+    background: var(--bg-header);
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 1000;
+    box-shadow: var(--shadow-md);
+}
+
+/* شعار الموقع */
+.header-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.header-logo img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--color-light);
+}
+.header-logo .site-name {
+    font-size: 1.5rem;
+    font-weight: var(--font-weight-bold);
+}
+
+/* مجموعة روابط الهيدر */
+.header-nav {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+/* زر خاص بالهيدر - يستخدم صنف btn مع تخصيص */
+.btn-header {
+    background: rgba(255,255,255,0.1);
+    color: var(--text-light);
+    border-radius: 50px;
+    padding: 8px 16px;
+    position: relative;
+    transition: background var(--transition-speed);
+}
+.btn-header:hover {
+    background: rgba(255,255,255,0.2);
+}
+/* دائرة العداد */
+.badge {
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    background: var(--color-danger);
+    color: white;
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 20px;
+    min-width: 22px;
+    text-align: center;
+    line-height: 1;
+}
+
+/* معلومات المستخدم */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-right: 15px;
+    padding-right: 15px;
+    border-right: 1px solid rgba(255,255,255,0.2);
+}
+.user-info img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--color-gray);
+}
+
+/* زر القائمة للجوال (مخفي افتراضياً) */
+.sidebar-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.8rem;
+    cursor: pointer;
+    padding: 10px;
+}
+
+/* ===== الحاوية الرئيسية للتطبيق ===== */
+.app-container {
+    display: flex;
+    margin-top: px; /* ارتفاع الهيدر */
+    height: calc(100vh - 70px);
+}
+
+/* ===== الشريط الجانبي الثابت ===== */
+.main-sidebar {
+    width: 260px;
+    background: var(--bg-sidebar);
+    color: var(--text-light);
+    position: fixed;
+    right: 0;
+    top: 70px;
+    bottom: 0;
+    overflow-y: auto;
+    transition: transform var(--transition-speed) ease;
+    z-index: 999;
+    padding: 20px 0;
+    box-shadow: var(--shadow-md);
+}
+
+/* تخصيص شريط التمرير للسايدبار */
+.main-sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+.main-sidebar::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.05);
+}
+.main-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.2);
+    border-radius: 3px;
+}
+
+/* عناصر القائمة */
+.sidebar-nav {
+    list-style: none;
+    padding: 0 15px;
+}
+.sidebar-nav li {
+    margin-bottom: 4px;
+}
+/* روابط السايدبار تستخدم الصنف btn-sidebar */
+.btn-sidebar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    color: var(--text-light);
+    background: transparent;
+    border-radius: 8px;
+    transition: background var(--transition-speed);
+    width: 100%;
+    text-align: right;
+}
+.btn-sidebar:hover {
+    background: rgba(255,255,255,0.1);
+}
+.btn-sidebar.active {
+    background: var(--color-primary);
+}
+
+/* ===== المحتوى الرئيسي ===== */
+.main-content {
+    flex: 1;
+    margin-right: 260px; /* عرض السايدبار */
+    overflow-y: auto;
+    height: 100%;
+    padding: 30px;
+    background: var(--color-lighter);
+}
+
+/* تحسين شريط التمرير للمحتوى */
+.main-content::-webkit-scrollbar {
+    width: 8px;
+}
+.main-content::-webkit-scrollbar-track {
+    background: #e2e8f0;
+}
+.main-content::-webkit-scrollbar-thumb {
+    background: var(--color-gray);
+    border-radius: 4px;
+}
+
+/* ===== التخطيط الشبكي المرن للمحتوى ===== */
+.content-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+/* بطاقة */
+.card {
+    background: var(--color-white);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+}
+
+/* ===== وسائط الاستجابة ===== */
+@media (max-width: 1024px) {
+    .main-sidebar {
+        width: 200px;
+    }
+    .main-content {
+        margin-right: 200px;
+    }
+}
+
+@media (max-width: 768px) {
+    /* إظهار زر فتح السايدبار */
+    .sidebar-toggle {
+        display: block;
+    }
+    /* إخفاء السايدبار بشكل افتراضي */
+    .main-sidebar {
+        transform: translateX(100%); /* يختفي إلى اليمين (RTL) */
+        width: 260px;
+    }
+    /* عند إضافة كلاس open يصبح مرئياً */
+    .main-sidebar.open {
+        transform: translateX(0);
+    }
+    /* المحتوى يأخذ العرض الكامل */
+    .main-content {
+        margin-right: 0;
+    }
+    /* تأثير خلفية داكنة عند فتح القائمة */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 70px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 998;
+    }
+    .sidebar-overlay.active {
+        display: block;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-logo .site-name {
+        font-size: 1.2rem;
+    }
+    .btn-header span:not(.badge) {
+        display: none; /* إخفاء النص في الأزرار الصغيرة جداً */
+    }
+}
