@@ -7,8 +7,6 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
-Route::get('/products',ProductController::class ."@index" );
-Route::get('/product/create',ProductController::class ."@create" )->where("product.ceate");
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -20,13 +18,18 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::get('/products', [ProductController::class, 'index'])->name('product.index');
-Route::get('/products/create', [ProductController::class, 'create'])->name('product.create');
-Route::get('/products/{id}/show', [ProductController::class, 'show'])->name('product.show');
+Route::prefix('products')->name('product.')->group(function () {
+    Route::get('/', [ProductController::class, 'index'])->name('index');
+    Route::get('/create', [ProductController::class, 'create'])->name('create');
+    Route::post('/', [ProductController::class, 'store'])->name('store');
+    Route::get('/{id}', [ProductController::class, 'show'])->name('show');
+});
 
-// مسارات الـ API الخلفية التي تستدعيها بالـ JavaScript لتعديل وحذف المنتجات
-Route::get('/api/product/{id}/edit', [ProductController::class, 'edit']);
-Route::post('/api/products/{id}', [ProductController::class, 'update']);
-Route::delete('/api/product/{id}', [ProductController::class, 'destroy']);
+//  مسارات API للتعديل والحذف
+Route::prefix('api/product')->group(function () {
+    Route::get('/{id}/edit', [ProductController::class, 'edit']);
+    Route::post('/{id}', [ProductController::class, 'update']);
+    Route::delete('/{id}', [ProductController::class, 'destroy']);
+});
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

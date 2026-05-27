@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title',"لوحة التحكم")</title>
             @vite('resources/css/main.css');
+                @stack('styles')
+
 
 </head>
 <body>
@@ -20,7 +22,7 @@
 <!-- Header ثابت -->
 <header class="main-header" role="banner">
     <div class="header-logo">
-        <img src="images/settings/slogan.png" alt="شعار الموقع">
+        <img src="{{ asset('storage/file_00000000cf34720ab4c5b0a4bed6adaa.png') }}" alt="شعار الموقع">
         <span class="site-name">التسوق الإلكتروني</span>
     </div>
 
@@ -39,7 +41,7 @@
         </a>
 
         <div class="user-info">
-            <img src="  images/settings/slogan.png" alt="صورة المستخدم">
+            <img src="{{ asset('storage/file_00000000cf34720ab4c5b0a4bed6adaa.png') }}" alt="صورة المستخدم">
             <span></span>
         </div>
     </nav>
@@ -68,10 +70,8 @@
     <!-- هنا سيتم وضع المحتوى الخاص بكل صفحة -->
 
 
-<div class="main">
    @yield('content')
 
-</div>
 </main><!-- نهاية main-content -->
 </div><!-- نهاية app-container -->
 
@@ -120,6 +120,6 @@
     });
 })();
 </script>
-
+   @stack('scripts')
 </body>
 </html>
