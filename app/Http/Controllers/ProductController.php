@@ -1,9 +1,6 @@
 <?php
-
 namespace App\Http\Controllers;
-
 use Illuminate\Support\Facades\DB;
-
 use Illuminate\Http\Request;
 class ProductController extends Controller
 {
@@ -428,7 +425,7 @@ class ProductController extends Controller
             'suppliers.*.lead_time_days' => 'nullable|numeric|min:0',   // ✅ تغيير
             'suppliers.*.minimum_order' => 'nullable|numeric|min:1',    // ✅ تغيير
 
-            // المخزون
+            
             'inventory' => 'nullable|array',
             'inventory.*.warehouse_id' => 'required|integer|exists:warehouse,warehouse_id',
             'inventory.*.quantity' => 'required|numeric|min:0',         // ✅ تغيير

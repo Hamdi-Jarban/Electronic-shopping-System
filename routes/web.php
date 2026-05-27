@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +24,12 @@ Route::prefix('products')->name('product.')->group(function () {
     Route::get('/create', [ProductController::class, 'create'])->name('create');
     Route::post('/', [ProductController::class, 'store'])->name('store');
     Route::get('/{id}', [ProductController::class, 'show'])->name('show');
+});
+//الطلبات
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/order', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/order/{order}', [OrderController::class, 'show'])->name('orders.show');
+    Route::patch('/order/{id}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
 });
 
 //  مسارات API للتعديل والحذف

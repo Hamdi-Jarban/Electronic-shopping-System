@@ -53,8 +53,8 @@
 <aside class="main-sidebar" id="mainSidebar" role="navigation" aria-label="القائمة الرئيسية">
     <ul class="sidebar-nav">
         <li><a href="#" class="btn btn-sidebar active">الرئيسية</a></li>
-        <li><a href="home/about" class="btn btn-sidebar">الطلبات</a></li>
-        <li><a href="product/index" class="btn btn-sidebar">المنتجات</a></li>
+        <li><a href="/admin/order" class="btn btn-sidebar">الطلبات</a></li>
+        <li><a href="/products" class="btn btn-sidebar">المنتجات</a></li>
         <li><a href="#" class="btn btn-sidebar">التقارير</a></li>
         <li><a href="#" class="btn btn-sidebar">الموارد البشرية</a></li>
         <li><a href="user" class="btn btn-sidebar">المستخدمين</a></li>
