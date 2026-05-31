@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('supplier_id')->constrained()->cascadeOnDelete();
             $table->integer('lead_time_days')->nullable();
             $table->integer('minimum_order')->default(1);
-            $table->primary([
+            $table->unique([
                 'product_id',
                 'supplier_id'
             ]);

@@ -1,7 +1,17 @@
 <?php
+
 namespace App\Http\Controllers;
-use Illuminate\Support\Facades\DB;
+
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
+// ◄ أسطر الاستدعاء المفقودة التي تسبب الخطأ الرئيسي
+use App\Models\Product;
+use App\Models\Category;
+use App\Models\Brand;
+
 class ProductController extends Controller
 {
 
@@ -10,106 +20,101 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $categoryId = $request->get('category_id');
-        $brandId = $request->get('brand_id');
-        $isActive = $request->get('is_active');
-        $search = $request->get('search');
-        $sortBy = $request->get('sort_by', 'newest');
+        // 1. تجهيز الاستعلام الأساسي مع الـ Eager Loading لمنع الـ N+1 Query
+        $query = Product::with(['brand', 'categories', 'variants.inventory']);
 
-        $query = DB::table('product as p')
-            ->leftJoin('brand as b', 'p.brand_id', '=', 'b.brand_id')
-            ->leftJoin('product_variant as v', 'v.product_id', '=', 'p.product_id')
-            ->leftJoin('product_category as pc', 'pc.product_id', '=', 'p.product_id')
-            ->leftJoin('category as c', 'pc.category_id', '=', 'c.category_id')
-            ->select(
-                'p.product_id',
-                'p.name as product_name',
-                'p.description',
-                'p.base_image_url',
-                'p.is_active',
-                'b.brand_id',
-                'b.name as brand_name',
-                'v.variant_id',
-                'v.SKU',
-                'v.price as variant_price',
-                'c.category_id',
-                'c.name as category_name'
-            );
-
-        if ($categoryId) {
-            $query->where('c.category_id', $categoryId);
-        }
-
-        if ($brandId) {
-            $query->where('p.brand_id', $brandId);
-        }
-
-        if ($isActive !== null && $isActive !== '') {
-            $query->where('p.is_active', $isActive);
-        }
-
-        if ($search) {
+        // 🔍 فلتر البحث الذكي (يبحث في اسم المنتج، أو SKU المتغير)
+        if ($request->filled('search')) {
+            $search = $request->get('search');
             $query->where(function ($q) use ($search) {
-                $q->where('p.name', 'like', "%{$search}%")
-                    ->orWhere('v.SKU', 'like', "%{$search}%");
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhereHas('variants', function ($vQ) use ($search) {
+                        $vQ->where('sku', 'like', "%{$search}%");
+                    });
             });
         }
 
-        switch ($sortBy) {
-            case 'oldest':
-                $query->orderBy('p.product_id', 'asc');
-                break;
-            case 'name_asc':
-                $query->orderBy('p.name', 'asc');
-                break;
-            case 'name_desc':
-                $query->orderBy('p.name', 'desc');
-                break;
-            default:
-                $query->orderBy('p.product_id', 'desc');
+        // 📂 فلتر الأقسام (يدعم جدول الربط المتقدم Many-to-Many)
+        if ($request->filled('category_id')) {
+            $query->whereHas('categories', function ($q) use ($request) {
+                $q->where('categories.id', $request->get('category_id'));
+            });
         }
 
-        $products = $query->get();
+        // 🏷️ فلتر العلامة التجارية
+        if ($request->filled('brand_id')) {
+            $query->where('brand_id', $request->get('brand_id'));
+        }
 
-        // تجميع البيانات
-        $grouped = $products->groupBy('product_id')->map(function ($items) {
-            $first = $items->first();
-            return (object) [
-                'product_id'     => $first->product_id,
-                'product_name'   => $first->product_name,
-                'description'    => $first->description,
-                'base_image_url' => $first->base_image_url,
-                'is_active'      => $first->is_active,
-                'brand_id'       => $first->brand_id,
-                'brand_name'     => $first->brand_name,
-                'variant_count'  => $items->pluck('variant_id')->filter()->unique()->count(),
-                'min_price'      => $items->pluck('variant_price')->filter()->min(),
-                'max_price'      => $items->pluck('variant_price')->filter()->max(),
-                'sku_list'       => $items->pluck('SKU')->filter()->unique()->implode(', '),
-                'categories'     => $items->pluck('category_name')->filter()->unique()->values(),
-                'category_ids'   => $items->pluck('category_id')->filter()->unique()->values(),
-            ];
-        })->values();
+        // 📊 فلتر الحالة (نشط / غير نشط)
+        if ($request->filled('is_active')) {
+            $query->where('is_active', $request->get('is_active'));
+        }
 
-        //  جلب التصنيفات والعلامات التجارية
-        $categories = DB::table('category')->orderBy('name')->get();
-        $brands = DB::table('brand')->orderBy('name')->get();
+        // 🟢🔴 فلتر حالة المخزون (متوفر / غير متوفر) مرتبط بالـ Variant والمخزون الجديد
+        if ($request->filled('stock_status')) {
+            if ($request->get('stock_status') === 'in_stock') {
+                $query->whereHas('variants.inventory', function ($q) {
+                    $q->where('quantity_in_stock', '>', 0);
+                });
+            } else {
+                // منتج ليس لديه أي متغير بمخزون أكبر من صفر
+                $query->whereDoesntHave('variants.inventory', function ($q) {
+                    $q->where('quantity_in_stock', '>', 0);
+                });
+            }
+        }
 
+        // 💰 فلتر مدى السعر (يعتمد على أسعار المتغيرات المتاحة)
+        if ($request->filled('price_from')) {
+            $query->whereHas('variants', function ($q) use ($request) {
+                $q->where('price', '>=', $request->get('price_from'));
+            });
+        }
+        if ($request->filled('price_to')) {
+            $query->whereHas('variants', function ($q) use ($request) {
+                $q->where('price', '<=', $request->get('price_to'));
+            });
+        }
+
+        // 🔥 ترتيب البيانات الاحترافي (Sorting)
+        switch ($request->get('sort_by', 'newest')) {
+            case 'oldest':
+                $query->oldest();
+                break;
+            case 'name_asc':
+                $query->orderBy('name', 'asc');
+                break;
+            case 'name_desc':
+                $query->orderBy('name', 'desc');
+                break;
+            case 'price_asc':
+                $query->withMin('variants', 'price')->orderBy('variants_min_price', 'asc');
+                break;
+            case 'price_desc':
+                $query->withMax('variants', 'price')->orderBy('variants_max_price', 'desc');
+                break;
+            default:
+                $query->latest();
+        }
+
+        // 📦 جلب المنتجات مع الترقيم التلقائي (Pagination) لحماية الأداء
+        $products = $query->paginate(12)->withQueryString();
+
+        // 📊 حساب الإحصائيات بدقة مذهلة وسرعة عبر استعلامات تجميعية خفيفة
         $stats = [
-            'total'    => $grouped->count(),
-            'active'   => $grouped->where('is_active', 1)->count(),
-            'stock'    => 0,
-            'variants' => $grouped->sum('variant_count'),
+            'total'    => Product::count(),
+            'active'   => Product::where('is_active', true)->count(),
+            'stock'    => DB::table('inventories')->sum('quantity_in_stock'), // استعلام مباشر سريع جداً للتقرير
+            'variants' => DB::table('product_variants')->count(),
         ];
 
-        return view('product.index', [
-            'products'   => $grouped,
-            'stats'      => $stats,
-            'categories' => $categories,
-            'brands'     => $brands,
-        ]);
-    }
+        // جلب الفلاتر المساعدة للـ Dropdowns عبر الموديلات بشكل مباشر وأنظف
+        $categories = Category::orderBy('name')->get();
+        $brands = Brand::orderBy('name')->get();
 
+        return view('product.index', compact('products', 'stats', 'categories', 'brands'));
+    }
 
     public function show(string $id)
     {
@@ -207,6 +212,7 @@ class ProductController extends Controller
             ], 500);
         }
     }
+
     public function create()
     {
         $brands = DB::table('brand')->orderBy('name')->get();
@@ -219,7 +225,8 @@ class ProductController extends Controller
 
     /**
      * Update the specified resource in storage.
-     */ public function update(Request $request, string $id)
+     */
+    public function update(Request $request, string $id)
     {
         try {
             DB::beginTransaction();
@@ -367,6 +374,7 @@ class ProductController extends Controller
             ], 500);
         }
     }
+
     /**
      * Remove the specified resource from storage.
      */
@@ -382,7 +390,7 @@ class ProductController extends Controller
                 ], 404);
             }
 
-            //  ببساطة: احذف المنتج فقط - وقاعدة البيانات ستتولى الباقي عبر CASCADE
+            // ببساطة: احذف المنتج فقط - وقاعدة البيانات ستتولى الباقي عبر CASCADE
             DB::table('product')->where('product_id', $id)->delete();
 
             return response()->json([
@@ -396,6 +404,7 @@ class ProductController extends Controller
             ], 500);
         }
     }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -422,26 +431,27 @@ class ProductController extends Controller
             'suppliers' => 'nullable|array',
             'suppliers.*.supplier_id' => 'required|integer|exists:supplier,supplier_id',
             'suppliers.*.supply_price' => 'required|numeric|min:0',
-            'suppliers.*.lead_time_days' => 'nullable|numeric|min:0',   // ✅ تغيير
-            'suppliers.*.minimum_order' => 'nullable|numeric|min:1',    // ✅ تغيير
+            'suppliers.*.lead_time_days' => 'nullable|numeric|min:0',
+            'suppliers.*.minimum_order' => 'nullable|numeric|min:1',
 
-            
+            // المخزون
             'inventory' => 'nullable|array',
             'inventory.*.warehouse_id' => 'required|integer|exists:warehouse,warehouse_id',
-            'inventory.*.quantity' => 'required|numeric|min:0',         // ✅ تغيير
-            'inventory.*.reorder_level' => 'nullable|numeric|min:0',    // ✅ تغيير
-            'inventory.*.reorder_quantity' => 'nullable|numeric|min:0', // ✅ تغيير
+            'inventory.*.quantity' => 'required|numeric|min:0',
+            'inventory.*.reorder_level' => 'nullable|numeric|min:0',
+            'inventory.*.reorder_quantity' => 'nullable|numeric|min:0',
         ]);
+
         try {
             DB::beginTransaction();
 
-            // ========== 2. رفع الصورة الرئيسية ==========
+            // ========== رفع الصورة الرئيسية ==========
             $imagePath = null;
             if ($request->hasFile('base_image_url')) {
                 $imagePath = '/storage/' . $request->file('base_image_url')->store('products', 'public');
             }
 
-            // ========== 3. إضافة المنتج الأساسي ==========
+            // ========== إضافة المنتج الأساسي ==========
             $productId = DB::table('product')->insertGetId([
                 'name' => $request->product_name,
                 'description' => $request->description,
@@ -450,12 +460,11 @@ class ProductController extends Controller
                 'is_active' => $request->is_active ?? 1,
             ]);
 
-            // ========== 4. إضافة المتغيرات ==========
-            $variantIds = []; // لتخزين معرفات المتغيرات للمخزون
+            // ========== إضافة المتغيرات ==========
+            $variantIds = [];
 
             if ($request->has('variants') && is_array($request->variants)) {
                 foreach ($request->variants as $index => $variant) {
-                    // تخطي المتغيرات الفارغة
                     if (empty($variant['SKU']) && empty($variant['price'])) {
                         continue;
                     }
@@ -474,7 +483,7 @@ class ProductController extends Controller
                 }
             }
 
-            // ========== 5. إضافة التصنيفات ==========
+            // ========== إضافة التصنيفات ==========
             if ($request->has('categories') && is_array($request->categories)) {
                 $categoriesData = [];
                 foreach ($request->categories as $categoryId) {
@@ -489,11 +498,10 @@ class ProductController extends Controller
                 }
             }
 
-            // ========== 6. إضافة الموردين ==========
+            // ========== إضافة الموردين ==========
             if ($request->has('suppliers') && is_array($request->suppliers)) {
                 $suppliersData = [];
                 foreach ($request->suppliers as $supplier) {
-                    // تخطي الموردين بدون بيانات كاملة
                     if (empty($supplier['supplier_id']) || empty($supplier['supply_price'])) {
                         continue;
                     }
@@ -512,10 +520,10 @@ class ProductController extends Controller
                 }
             }
 
-            // ========== 7. إضافة المخزون (يرتبط بأول متغير) ==========
+            // ========== إضافة المخزون ==========
             if ($request->has('inventory') && is_array($request->inventory) && !empty($variantIds)) {
                 $inventoryData = [];
-                $firstVariantId = $variantIds[0]; // استخدام أول متغير للمخزون
+                $firstVariantId = $variantIds[0];
 
                 foreach ($request->inventory as $inv) {
                     if (empty($inv['warehouse_id'])) {
@@ -537,7 +545,7 @@ class ProductController extends Controller
                 }
             }
 
-            // ========== 8. تسجيل التدقيق ==========
+            // ========== تسجيل التدقيق ==========
             DB::table('product_audit')->insert([
                 'product_id' => $productId,
                 'user_id' => auth()->id() ?? 1,
@@ -560,9 +568,8 @@ class ProductController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            // تسجيل الخطأ
-            \Log::error('Error creating product: ' . $e->getMessage());
-            \Log::error($e->getTraceAsString());
+            Log::error('Error creating product: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
 
             return redirect()
                 ->back()

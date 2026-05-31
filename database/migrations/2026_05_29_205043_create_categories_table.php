@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->foreignId('parent_category_id')->nullable()->constrained('categories')->nullOnDelete();
-            $table->string('name');
         });
     }
 
