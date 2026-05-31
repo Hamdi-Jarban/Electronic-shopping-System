@@ -175,7 +175,7 @@
                 @if($product->categories->isNotEmpty())
                 <div class="category-chips">
                     @foreach($product->categories->take(3) as $cat)
-                        <span class="chip">{{ $cat }}</span>
+                        <span class="chip">{{ $cat->name }}</span>
                     @endforeach
                 </div>
                 @endif

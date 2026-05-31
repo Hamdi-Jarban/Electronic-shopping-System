@@ -12,9 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('categories', function (Blueprint $table) {
-            $table->id();
+            $table->id('category_id');
             $table->string('name');
-            $table->foreignId('parent_category_id')->nullable()->constrained('categories')->nullOnDelete();
+            $table->string('slug')->unique(); // تم إضافته للـ SEO
+            $table->unsignedBigInteger('parent_category_id')->nullable();
+
+            $table->foreign('parent_category_id')->references('category_id')->on('categories')->onDelete('set null')->onUpdate('cascade');
+            $table->timestamps();
         });
     }
 
