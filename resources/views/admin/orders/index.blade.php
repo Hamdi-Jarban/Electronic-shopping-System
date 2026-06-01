@@ -148,15 +148,16 @@
     
     {{-- ✅ حالة الطلب - بالقيم العربية --}}
     <td>
-        <span class="badge status-{{ $order->order_status }}">
+        <span class="badgeorder status-{{ $order->order_status }}">
             @switch($order->order_status)
-                @case('قيد الانتظار') ⏳ قيد الانتظار @break
-                @case('مؤكد') ✅ مؤكد @break
-                @case('تاكيد') ✅ مؤكد @break
-                @case('معلق') 🔄 معالجة @break
+                @case('قيد الانتظار') 
+                @break
+                @case('pending') ✅ مؤكد @break
+                @case('تاكيد') ✅ مؤكد @break 
+                @case('shipped') 🔄 معالجة @break
                 @case('تم الشحن') 🚚 تم الشحن @break
-                @case('مكتمل') 📦 مكتمل @break
-                @case('ملغي') ❌ ملغي @break
+                @case('delivered') 📦 مكتمل @break
+                @case('processing') ❌ ملغي @break
                 @default ⚪ {{ $order->order_status ?? 'غير معروف' }}
             @endswitch
         </span>
@@ -164,10 +165,12 @@
     
     {{-- ✅ حالة الدفع - بالقيم الإنجليزية --}}
     <td>
+        {{$order->payment_status ?? "nn"}}
         @if($order->payment_status)
-        <span class="badge payment-{{ $order->payment_status }}">
+        <span class="badgeorder payment-{{ $order->payment_status }}">
             @switch($order->payment_status)
-                @case('pending') ⏳ معلق @break
+                @case('pending')
+                 ⏳ معلق @break
                 @case('success') ✅ ناجح @break
                 @case('failed') ❌ فاشل @break
                 @case('refunded') ↩️ مسترجع @break
@@ -175,15 +178,15 @@
             @endswitch
         </span>
         @else
-            <span class="badge bg-gray">-</span>
+            <span class="badgeorder bg-gray">-</span>
         @endif
     </td>
     
     <td>
         @if($order->tracking_number)
-            <span class="badge shipment-info">🚚 {{ $order->tracking_number }}</span>
+            <span class="badgeorder shipment-info">🚚 {{ $order->tracking_number }}</span>
         @elseif($order->delivery_status)
-            <span class="badge delivery-info">🛵 {{ $order->driver_name ?? 'مندوب' }}</span>
+            <span class="badgeorder delivery-info">🛵 {{ $order->driver_name ?? 'مندوب' }}</span>
         @else
             <span class="text-muted">-</span>
         @endif
@@ -203,10 +206,7 @@
     </table>
 </div>
 
-{{-- ترقيم --}}
-<div class="pagination-wrapper">
-    {{ $orders->links() }}
-</div>
+
 
 @endsection
 
@@ -358,7 +358,7 @@
     }
 
     /* الشارات (Badges) */
-    .badge {
+    .badgeorder {
         display: inline-block;
         padding: 4px 10px;
         border-radius: 20px;
@@ -391,8 +391,6 @@
         padding: 40px;
         color: #94a3b8;
     }
-    .pagination-wrapper {
-        margin-top: 20px;
-    }
+ 
 </style>
 @endpush

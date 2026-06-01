@@ -22,6 +22,11 @@ class Product extends Model
         'is_active' => 'boolean',
     ];
 
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class,'brand_id', 'brand_id');
+    }
+
     public function categories()
     {
         return $this->belongsToMany(Category::class, 'product_category', 'product_id', 'category_id');
@@ -36,5 +41,15 @@ class Product extends Model
     public function variants()
     {
         return $this->hasMany(ProductVariant::class, 'product_id', 'product_id');
+    }
+    public function getMinPriceAttributs()
+    {
+        return $this->variants->min('price');
+    }
+    public function getTotalStockAttributs()
+    {
+        return $this->variants->sum(function($variant){
+            return $variant->inventories->sum('quantity_in_stock');
+        });
     }
 }

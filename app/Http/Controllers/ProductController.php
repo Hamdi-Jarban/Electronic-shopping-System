@@ -26,76 +26,74 @@ class ProductController extends Controller
     {
         // 1. بناء الاستعلام مع العلاقات لجلب المنتجات وحساب الأسعار والمتغيرات
         $query = Product::with(['categories'])
-            ->leftJoin('product_variants', 'products.product_id', '=', 'product_variants.product_id')
-            ->leftJoin('brands', 'products.brand_id', '=', 'brands.brand_id')
+            ->leftJoin('product_variant', 'product.product_id', '=', 'product_variant.product_id')
+            ->leftJoin('brand', 'product.brand_id', '=', 'brand.brand_id')
             ->select(
-                'products.product_id',
-                'products.name as product_name', // 💡 جلبنا 'name' وعملنا له Alias باسم 'product_name' ليتوافق مع الـ Blade
-                'products.base_image_url',
-                'products.is_active',
-                'products.created_at',
-                'brands.name as brand_name',
-                DB::raw('COUNT(product_variants.variant_id) as variant_count'),
-                DB::raw('MIN(product_variants.price) as min_price'),
-                DB::raw('MAX(product_variants.price) as max_price')
+                'product.product_id',
+                'product.name as name', // 💡 جلبنا 'name' وعملنا له Alias باسم 'product_name' ليتوافق مع الـ Blade
+                'product.base_image_url',
+                'product.is_active',
+                'brand.name as brand_name',
+                DB::raw('COUNT(product_variant.variant_id) as variant_count'),
+                DB::raw('MIN(product_variant.price) as min_price'),
+                DB::raw('MAX(product_variant.price) as max_price')
             )
             ->groupBy(
-                'products.product_id',
-                'products.name', // 💡 نضع الاسم الفعلي هنا في الـ Group By
-                'products.base_image_url',
-                'products.is_active',
-                'products.created_at',
-                'brands.name'
+                'product.product_id',
+                'product.name', // 💡 نضع الاسم الفعلي هنا في الـ Group By
+                'product.base_image_url',
+                'product.is_active',
+                'brand.name'
             );
         // فلتر البحث (اسم، SKU، وصف)
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('products.product_name', 'LIKE', "%{$search}%")
-                    ->orWhere('products.description', 'LIKE', "%{$search}%")
-                    ->orWhere('product_variants.SKU', 'LIKE', "%{$search}%");
+                $q->where('product.name', 'LIKE', "%{$search}%")
+                    ->orWhere('product.description', 'LIKE', "%{$search}%")
+                    ->orWhere('product_variant.SKU', 'LIKE', "%{$search}%");
             });
         }
 
         // فلتر القسم
         if ($request->filled('category_id')) {
             $query->whereHas('categories', function ($q) use ($request) {
-                $q->where('categories.category_id', $request->category_id);
+                $q->where('category.category_id', $request->category_id);
             });
         }
 
         // فلتر العلامة التجارية
         if ($request->filled('brand_id')) {
-            $query->where('products.brand_id', $request->brand_id);
+            $query->where('product.brand_id', $request->brand_id);
         }
 
         // فلتر الحالة (نشط / غير نشط)
         if ($request->filled('is_active')) {
-            $query->where('products.is_active', $request->is_active);
+            $query->where('product.is_active', $request->is_active);
         }
 
         // فلتر المخزون (متوفر / غير متوفر)
         if ($request->filled('stock_status')) {
             if ($request->stock_status == 'in_stock') {
-                $query->where('product_variants.stock_quantity', '>', 0);
+                $query->where('product_variant.price', '>', 0);
             } elseif ($request->stock_status == 'out_of_stock') {
-                $query->where('product_variants.stock_quantity', '<=', 0);
+                $query->where('product_variant.price', '<=', 0);
             }
         }
 
         // فلتر نطاق السعر
         if ($request->filled('price_from')) {
-            $query->where('product_variants.price', '>=', $request->price_from);
+            $query->where('product_variant.price', '>=', $request->price_from);
         }
         if ($request->filled('price_to')) {
-            $query->where('product_variants.price', '<=', $request->price_to);
+            $query->where('product_variant.price', '<=', $request->price_to);
         }
 
         // الترتيب (Sort By)
         if ($request->filled('sort_by')) {
             switch ($request->sort_by) {
                 case 'oldest':
-                    $query->orderBy('products.created_at', 'asc');
+                    $query->orderBy('product.name', 'asc');
                     break;
                 case 'price_asc':
                     $query->orderBy('min_price', 'asc');
@@ -104,18 +102,18 @@ class ProductController extends Controller
                     $query->orderBy('min_price', 'desc');
                     break;
                 case 'name_asc':
-                    $query->orderBy('products.product_name', 'asc');
+                    $query->orderBy('product.name', 'asc');
                     break;
                 case 'name_desc':
-                    $query->orderBy('products.product_name', 'desc');
+                    $query->orderBy('product.name', 'desc');
                     break;
                 // الأحدث هو الافتراضي
                 default:
-                    $query->orderBy('products.created_at', 'desc');
+                    $query->orderBy('product.name', 'desc');
                     break;
             }
         } else {
-            $query->orderBy('products.created_at', 'desc');
+            $query->orderBy('product.name', 'desc');
         }
 
         // 2. جلب المنتجات المفلوترة
@@ -125,8 +123,8 @@ class ProductController extends Controller
         $stats = [
             'total'    => Product::count(),
             'active'   => Product::where('is_active', 1)->count(),
-            'stock' => DB::table('product_variants')->sum('packaging'), // إجمالي قطع المخزون
-            'variants' => DB::table('product_variants')->count(), // إجمالي عدد المتغيرات
+            'stock' => DB::table('product_variant')->sum('packaging'), // إجمالي قطع المخزون
+            'variants' => DB::table('product_variant')->count(), // إجمالي عدد المتغيرات
         ];
 
         // 4. جلب القوائم المنسدلة لخيارات الفلترة
