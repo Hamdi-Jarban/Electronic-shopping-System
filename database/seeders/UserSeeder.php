@@ -49,7 +49,7 @@ class UserSeeder extends Seeder
         foreach ($testUsers as $data) {
             $user = User::create([
                 'email' => $data['email'],
-                'password_hash' => Hash::make('password'),
+                'password' => Hash::make('password'), // تعديل الحقل هنا إلى password
                 'full_name' => $data['full_name'],
                 'phone' => '05' . rand(10000000, 99999999),
                 'role' => $data['role'],
@@ -87,7 +87,7 @@ class UserSeeder extends Seeder
         for ($i = 1; $i <= 50; $i++) {
             $user = User::create([
                 'email' => 'customer' . $i . '@example.com',
-                'password_hash' => Hash::make('password'),
+                'password' => Hash::make('password'), // تعديل الحقل هنا إلى password
                 'full_name' => 'عميل ' . $i,
                 'phone' => '05' . rand(10000000, 99999999),
                 'role' => 'customer',
@@ -106,7 +106,7 @@ class UserSeeder extends Seeder
         for ($i = 1; $i <= 5; $i++) {
             $user = User::create([
                 'email' => 'admin' . $i . '@example.com',
-                'password_hash' => Hash::make('password'),
+                'password' => Hash::make('password'), // تعديل الحقل هنا إلى password
                 'full_name' => 'مشرف ' . $i,
                 'phone' => '05' . rand(10000000, 99999999),
                 'role' => 'admin',
@@ -125,7 +125,7 @@ class UserSeeder extends Seeder
         for ($i = 1; $i <= 5; $i++) {
             $user = User::create([
                 'email' => 'support' . $i . '@example.com',
-                'password_hash' => Hash::make('password'),
+                'password' => Hash::make('password'), // تعديل الحقل هنا إلى password
                 'full_name' => 'موظف دعم ' . $i,
                 'phone' => '05' . rand(10000000, 99999999),
                 'role' => 'support',

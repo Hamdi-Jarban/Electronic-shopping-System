@@ -14,9 +14,19 @@ class ShopController extends Controller
     {
         $req = Product::with(['brand','variants','categories'])
         ->where('is_active',true);
-        $product = $req->paginate(12);
+        if($request->filled('search'))
+            {
+                $req->where('name','like','%'.$request->search.'%');
+            }
+        if($request->filled('category'))
+            {
+                $req->whereHas('categories',function ($q)use($request){
+                    $q->where('category_id',$request->category);
+                });
+            }
+        $products = $req->paginate(12);
         $categories = Category::whereNull('parent_category_id')->with('children')->get();
-        $brands = Brand::all(12);
+        $brands = Brand::all();
 
         return view('shop.index', compact('products', 'categories', 'brands'));
     }

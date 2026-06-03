@@ -8,9 +8,12 @@ class Cart extends Model
 {
     protected $table = 'cart';
     protected $primaryKey = 'cart_id';
-    public $timestamps = false;
+    const UPDATED_AT = null;
 
-    protected $fillable = ['user_id', 'created_at'];
+    protected $fillable = [
+        'user_id',
+        'session_id'
+    ];
     public function items(){
         return $this->hasMany(CartItem::class,'cart_id','cart_id');
     }

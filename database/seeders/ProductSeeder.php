@@ -46,7 +46,7 @@ class ProductSeeder extends Seeder
                 'name' => $name . ' موديل ' . date('Y'),
                 'description' => 'وصف المنتج: ' . $name . ' عالي الجودة مع ضمان لمدة سنة كاملة. مناسب للاستخدام اليومي.',
                 'brand_id' => $brands->random()->brand_id,
-                'base_image_url' => null,
+                'base_image_url' => 'products/hamdi.ico',
                 'is_active' => true,
             ]);
 
@@ -68,7 +68,7 @@ class ProductSeeder extends Seeder
                     'packaging' => rand(0, 1) ? 'صندوق' : 'كيس',
                     'price' => $prices[$v],
                     'weight_kg' => rand(1, 100) / 10,
-                    'image_url' => null,
+                    'image_url' =>' hamdi.ico',
                 ]);
             }
 

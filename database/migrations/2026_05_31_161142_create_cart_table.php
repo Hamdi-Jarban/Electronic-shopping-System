@@ -11,18 +11,22 @@ return new class extends Migration
     {
         Schema::create('cart', function (Blueprint $table) {
             $table->integer('cart_id', true, true);
-            $table->integer('user_id', false, true);
+
+            $table->integer('user_id', false, true)->nullable();
+            $table->string('session_id')->nullable();
+
             $table->dateTime('created_at')->useCurrent();
 
             $table->unique('user_id', 'uk_user_cart');
+            $table->unique('session_id', 'uk_session_cart');
 
             $table->foreign('user_id', 'fk_cart_user')
-                ->references('user_id')->on('user')
+                ->references('user_id')->on('user')    
                 ->onDelete('cascade')
                 ->onUpdate('cascade');
         });
 
-        DB::statement("ALTER TABLE `cart` COMMENT 'سلة التسوق - سلة واحدة لكل عميل'");
+        DB::statement("ALTER TABLE `cart` COMMENT 'سلة التسوق - تدعم المستخدمين المسجلين والزوار المؤقتين'");
     }
 
     public function down(): void

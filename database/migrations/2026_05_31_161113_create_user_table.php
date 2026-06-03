@@ -7,31 +7,30 @@ use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('user', function (Blueprint $table) {
-            $table->integer('user_id', true, true); // INT UNSIGNED AUTO_INCREMENT
-            $table->string('email', 255);
-            $table->string('password_hash', 255);
+            $table->integer('user_id', true, true); 
             $table->string('full_name', 255);
+            $table->string('email', 255);
             $table->string('phone', 20)->nullable();
-            $table->enum('role', ['customer', 'admin', 'support', 'inventory']);
-            $table->dateTime('created_at')->useCurrent();
 
-            // Indexes
+            $table->string('password', 255);
+
+            $table->enum('role', ['customer', 'admin', 'support', 'inventory'])->default('customer');
+
+            $table->rememberToken(); 
+            $table->timestamp('email_verified_at')->nullable(); 
+
+            $table->timestamps();
+
             $table->unique('email', 'uk_email');
             $table->index('role', 'idx_role');
         });
 
-        DB::statement("ALTER TABLE `user` COMMENT 'جدول المستخدمين الأساسي - كل أنواع المستخدمين'");
+        DB::statement("ALTER TABLE `user` COMMENT 'جدول المستخدمين الأساسي الموحد للمتجر'");
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('user');

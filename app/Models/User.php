@@ -17,14 +17,16 @@ class User extends Model
     protected $table = 'user'; // لأن اسم الجدول مفرد وليس جمع
     protected $primaryKey = 'user_id';
     public $timestamps = false; // لأن created_at ليس Timestamp تلقائي
-
     protected $fillable = [
-        'email',
-        'password_hash',
         'full_name',
+        'email',
         'phone',
+        'password',
         'role',
-        'created_at',
+    ];
+    protected $hidden = [
+        'password',
+        'remember_token',
     ];
 
     protected $casts = [

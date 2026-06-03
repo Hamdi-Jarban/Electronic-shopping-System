@@ -1,13 +1,25 @@
 <?php
 
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ShopController;
 use Illuminate\Support\Facades\Route;
+use PHPUnit\Metadata\Group;
 
-Route::get('/', [ShopController::class,'index'])->name('shop.name');
+Route::get('/', [ShopController::class,'index'])->name('shop.index');
+Route::get('/shop', [ShopController::class,'index'])->name('shop.show');
+Route::get('/shop/index', [ShopController::class,'index'])->name('cart.index');
 
+Route::prefix('cart')->name('cart.')->group(function ()
+{
+    // مسارات سلة التسوق
+    Route::get('/', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/add/{variantId}', [CartController::class, 'add'])->name('cart.add');
+    Route::put('/update/{itemId}', [CartController::class, 'update'])->name('cart.update');
+    Route::delete('/remove/{itemId}', [CartController::class, 'remove'])->name('cart.remove');
+});
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');

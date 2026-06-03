@@ -155,9 +155,9 @@
     <div class="products-grid">
         @forelse($products as $product)
         <div class="product-card" data-status="{{ $product->is_active }}">
-            <div class="card-img">
+            <div class="card-img">  
                 @if($product->base_image_url)
-                    <img src="{{ $product->base_image_url }}" alt="{{ $product->product_name }}" loading="lazy">
+                    <img src="{{asset('storage/'.$product->base_image_url)}}" alt="{{ $product->product_name }}" loading="lazy">
                 @else
                     <div class="img-placeholder"><span>📷</span><small>لا توجد صورة</small></div>
                 @endif
