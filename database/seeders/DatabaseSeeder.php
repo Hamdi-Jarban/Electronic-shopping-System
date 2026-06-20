@@ -3,52 +3,50 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use App\Models\Brand;
+use App\Models\Category;
+use App\Models\Product;
+use App\Models\ProductVariant;
 
 class DatabaseSeeder extends Seeder
 {
-    public function run(): void
-    {
-        DB::statement('SET FOREIGN_KEY_CHECKS=0');
 
-        $this->command->info('🚀 بدء إضافة البيانات التجريبية...');
-        $this->command->info('');
+  public function run(): void
+  {
+    // 1. تشغيل الـ Seeders الثابتة (المرحلة الأولى)
+    $this->call([
+    RolePermissionSeeder::class,
+    WarehouseSeeder::class,
+    AdminUserSeeder::class,
+    ]);
 
-        // المرحلة 1: بيانات أساسية
-        $this->call(WarehouseSeeder::class);
-        $this->call(SupplierSeeder::class);
-        $this->call(BrandAndCategorySeeder::class);
-        $this->command->info('');
+    // 2. تشغيل الـ Factories لتوليد بيانات وهمية (المرحلة الثانية)
+    // سنقوم بإنشاء 10 علامات تجارية و 10 أقسام
+    \App\Models\Brand::factory(10)->create();
+    \App\Models\Category::factory(10)->create();
 
-        // المرحلة 2: المستخدمين
-        $this->call(UserSeeder::class);
-        $this->command->info('');
+    // إنشاء 30 منتجاً
+    \App\Models\Product::factory(30)->create();
 
-        // المرحلة 3: المنتجات
-        $this->call(ProductSeeder::class);
-        $this->command->info('');
+    // إنشاء 60 متغيراً وتوزيعهم عشوائياً على المنتجات
+    \App\Models\ProductVariant::factory(60)->create();
 
-        // المرحلة 4: المخزون
-        $this->call(InventorySeeder::class);
-        $this->command->info('');
+    // 3. تغذية المخزون عشوائياً للمستودعات لكي لا تصبح الكميات صفرية
+    $variants = \DB::table('product_variants')->get();
+    $warehouses = \DB::table('warehouses')->get();
 
-        // المرحلة 5: الطلبات
-        $this->call(OrderSeeder::class);
-        $this->command->info('');
-
-        // المرحلة 6: التقييمات والسلال
-        $this->call(ReviewSeeder::class);
-        $this->call(CartSeeder::class);
-
-        DB::statement('SET FOREIGN_KEY_CHECKS=1');
-
-        $this->command->info('');
-        $this->command->info('✅ تمت إضافة جميع البيانات بنجاح!');
-        $this->command->info('');
-        $this->command->info('👤 حسابات الاختبار (كلمة المرور: password):');
-        $this->command->info('   admin@supermarket.com     - مدير النظام');
-        $this->command->info('   customer@supermarket.com  - عميل');
-        $this->command->info('   support@supermarket.com   - موظف دعم');
-        $this->command->info('   inventory@supermarket.com - مدير مخزون');
+    foreach ($warehouses as $warehouse) {
+      foreach ($variants as $variant) {
+        // نربط كل متغير بكل مستودع بكمية عشوائية
+        \DB::table('warehouse_inventory')->insert([
+        'warehouse_id' => $warehouse->id,
+        'variant_id' => $variant->id,
+        'physical_qty' => rand(20, 150),
+        'reserved_qty' => rand(0, 5),
+        'low_stock_threshold' => 10,
+        'updated_at' => now(),
+        ]);
+      }
     }
+  }
 }

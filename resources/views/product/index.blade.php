@@ -18,7 +18,7 @@
                 <span class="current">المنتجات</span>
             </div>
         </div>
-        <a href="{{ route('product.create') }}" class="btn btn-primary btn-lg">
+        <a href="{{ route('admin.products.create') }}" class="btn btn-primary btn-lg">
             <span>➕</span> إضافة منتج جديد
         </a>
     </div>

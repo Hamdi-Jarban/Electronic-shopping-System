@@ -2,22 +2,32 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Category extends Model
 {
-    protected $table = 'category';
-    protected $primaryKey = 'category_id';
-    public $timestamps = false;
+  use HasFactory;
 
-    protected $fillable = ['name', 'parent_category_id'];
+  protected $fillable = ['parent_id',
+    'name',
+    'slug',
+    'is_active'];
 
-    public function products()
-    {
-        return $this->belongsToMany(Product::class, 'product_category', 'category_id', 'product_id');
-    }
-    public function children()
-    {
-        return $this->hasMany(Category::class, 'parent_category_id', 'category_id');
-    }
+  public function parent(): BelongsTo {
+    return $this->belongsTo(Category::class, 'parent_id');
+  }
+
+  // علاقة القسم بالأقسام الفرعية التابعة له (الشجرة)
+  public function children(): HasMany {
+    return $this->hasMany(Category::class, 'parent_id');
+  }
+
+  // علاقة القسم بالمنتجات (Many-to-Many)
+  public function products(): BelongsToMany {
+    return $this->belongsToMany(Product::class, 'category_product');
+  }
 }

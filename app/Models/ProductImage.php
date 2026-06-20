@@ -2,11 +2,23 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductImage extends Model
 {
-    protected $primaryKey = 'image_id';
-    protected $fillable = ['product_id', 'image_url', 'sort_order'];
+  public $timestamps = false;
+  protected $fillable = ['product_id',
+    'variant_id',
+    'image_path',
+    'is_featured',
+    'sort_order'];
+
+  public function product(): BelongsTo {
+    return $this->belongsTo(Product::class);
+  }
+
+  public function variant(): BelongsTo {
+    return $this->belongsTo(ProductVariant::class);
+  }
 }

@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Brand extends Model
 {
-    protected $table = 'brand';
-    protected $primaryKey = 'brand_id';
-    public $timestamps = false;
+    use HasFactory;
+    protected $fillable = ['name', 'slug', 'logo_url', 'is_active'];
 
-    protected $fillable = ['name', 'logo_url'];
+    public function products(): HasMany {
+        return $this->hasMany(Product::class);
+    }
 }

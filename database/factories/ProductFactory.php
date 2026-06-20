@@ -2,21 +2,23 @@
 
 namespace Database\Factories;
 
-use App\Models\Product;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 class ProductFactory extends Factory
 {
-    protected $model = Product::class;
-
     public function definition(): array
     {
+        // التعديل: توليد اسم منتج من 3 كلمات عشوائية وجعل الحرف الأول كبيراً
+        $name = ucfirst($this->faker->words(3, true)); 
+        
         return [
-            'name' => fake()->unique()->words(3, true),
-            'description' => fake()->optional(0.8)->paragraph(3),
-            'brand_id' => null,
-            'base_image_url' => fake()->optional(0.6)->imageUrl(640, 480, 'product', true),
-            'is_active' => fake()->boolean(90),
+            'brand_id' => \DB::table('brands')->inRandomOrder()->first()?->id ?? 1,
+            'name' => $name,
+            'slug' => Str::slug($name) . '-' . rand(100, 999),
+            'description' => $this->faker->paragraph(3),
+            'summary' => $this->faker->sentence(),
+            'is_active' => true,
         ];
     }
 }

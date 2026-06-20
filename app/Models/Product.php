@@ -2,54 +2,42 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Product extends Model
 {
-    protected $table = 'product';
-    protected $primaryKey = 'product_id';
-    public $timestamps = false;
+  use HasFactory;
 
-    protected $fillable = [
-        'name',
-        'description',
-        'brand_id',
-        'base_image_url',
-        'is_active',
-    ];
+  protected $fillable = ['brand_id',
+    'name',
+    'slug',
+    'description',
+    'summary',
+    'is_active'];
 
-    protected $casts = [
-        'is_active' => 'boolean',
-    ];
+  // ينتمي لبراند معين
+  public function brand(): BelongsTo {
+    return $this->belongsTo(Brand::class);
+  }
 
-    public function brand()
-    {
-        return $this->belongsTo(Brand::class,'brand_id', 'brand_id');
-    }
+  public function categories(): BelongsToMany {
+    return $this->belongsToMany(Category::class, 'category_product');
+  }
 
-    public function categories()
-    {
-        return $this->belongsToMany(Category::class, 'product_category', 'product_id', 'category_id');
-    }
+  public function variants(): HasMany {
+    return $this->hasMany(ProductVariant::class);
+  }
 
-    public function suppliers()
-    {
-        return $this->belongsToMany(Supplier::class, 'product_supplier', 'product_id', 'supplier_id')
-            ->withPivot(['supply_price', 'lead_time_days', 'minimum_order']);
-    }
+  public function images(): HasMany {
+    return $this->hasMany(ProductImage::class);
+  }
 
-    public function variants()
-    {
-        return $this->hasMany(ProductVariant::class, 'product_id', 'product_id');
-    }
-    public function getMinPriceAttributs()
-    {
-        return $this->variants->min('price');
-    }
-    public function getTotalStockAttributs()
-    {
-        return $this->variants->sum(function($variant){
-            return $variant->inventories->sum('quantity_in_stock');
-        });
-    }
+  // مراجعات وتقييمات العملاء
+  public function reviews(): HasMany {
+    return $this->hasMany(ProductReview::class);
+  }
 }

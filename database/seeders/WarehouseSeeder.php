@@ -3,21 +3,31 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Warehouse;
+use Illuminate\Support\Facades\DB;
 
 class WarehouseSeeder extends Seeder
 {
     public function run(): void
     {
-        Warehouse::create(['name' => 'المستودع الرئيسي', 'location' => 'الرياض']);
-        Warehouse::create(['name' => 'مستودع الشمال', 'location' => 'جدة']);
-        Warehouse::create(['name' => 'مستودع الجنوب', 'location' => 'الدمام']);
-        Warehouse::create(['name' => 'مستودع التوزيع', 'location' => 'مكة']);
-        Warehouse::create(['name' => 'مستودع مركزي', 'location' => 'المدينة']);
-        Warehouse::create(['name' => 'مستودع شرق', 'location' => 'الدمام']);
-        Warehouse::create(['name' => 'مستودع غرب', 'location' => 'جدة']);
-        Warehouse::create(['name' => 'مستودع احتياطي', 'location' => 'القصيم']);
-
-        $this->command->info('✓ تم إنشاء ' . Warehouse::count() . ' مستودع');
+        DB::table('warehouses')->insert([
+            [
+                'name' => 'المستودع المركزي - الرياض',
+                'code' => 'WH-RUH-01',
+                'address' => 'حي السلي, شارع هارون الرشيد',
+                'city' => 'الرياض',
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name' => 'مستودع المنطقة الغربية - جدة',
+                'code' => 'WH-JED-02',
+                'address' => 'المنطقة الصناعية الثالثة',
+                'city' => 'جدة',
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        ]);
     }
 }
