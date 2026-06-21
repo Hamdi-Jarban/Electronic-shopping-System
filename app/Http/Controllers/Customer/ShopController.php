@@ -1,15 +1,21 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Customer;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use App\Models\Brand;
 use App\Models\Category;
-use Illuminate\Http\Request;
 
-class ProductController extends Controller
+class ShopController extends Controller
 {
   /**
   * Display a listing of the resource.
   */
+  public function home() {
+  $cart = Cart
+    return view('shop.index');
+  }
   public function index() {
     $product = Product::query()->where('is_active',true)
     ->with(['brand:id,name, slug',
