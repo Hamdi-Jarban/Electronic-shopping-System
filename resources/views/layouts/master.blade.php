@@ -2,6 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>@yield('title','الصفحةالرئيسية')</title>
 
@@ -10,6 +12,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
   @vite('resources/css/checkout/master.css')
+@vite('resources/css/customer/product/cart.css')
+
   @vite('resources/js/lucide.min.js')
   <!-- مكتبة الأيقونات Lucide (خفيفة جداً) -->
 
@@ -103,7 +107,8 @@
   <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
   <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
 </svg>
-            <span class="badge">5</span>
+            <span class="badge cart-count"id="cart-count">
+0            </span>
             <span class="cart-total">1,250 ر.س</span>
           </button>
 
@@ -199,7 +204,9 @@
     <a href="#" style="display:flex; align-items:center; gap:0.5rem; padding:0.5rem;"><i data-lucide="heart"></i> المفضلة (3)</a>
     <a href="#" style="display:flex; align-items:center; gap:0.5rem; padding:0.5rem;"><i data-lucide="shopping-cart"></i> السلة (2) - 1,250 ر.س</a>
   </div>
+  @yield('content')
   @vite('resources/js/master.js')
+  @vite('resources/js/customer/main.js')
 
 </body>
 </html>

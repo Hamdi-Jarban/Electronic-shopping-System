@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Controllers\Customer;
-
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Brand;
@@ -21,23 +20,17 @@ class ProductController extends Controller
     }
     public function index()
     {
-        $product = Product::query()->where('is_active', true)
+        $products = Product::where('is_feature', true)
             ->with([
-                'brand:id,name, slug',
-                'images' => function ($query) {
-                    $query->select('id', 'product_id', 'image_path', 'is_featured')->where('is_featured', true)
-                        ->orderBy('sort_order', 'asc');
+                'brand' => function ($query) {
+                    return $query->select('id', 'name');
                 },
-                'variants' => function ($query) {
-                    $query->select('id', 'product_id', 'price')->withSum('inventories as total_physical_stock', 'physical_qty');
-                }
-            ])->whereHas('variants', function ($query) {
-                $query->whereHas('inventories', function ($quantity) {
-                    $quantity->whereRaw('(physical_qty-reserved_qty)>0');
-                });
-            })
-            ->latest()->paginate(15);
-        return response()->json($product);
+                'defaultVarinat',
+                 'featureImage'
+            ])
+            ->withCount('reviews')
+            ->withAvg('reviews', 'rating')->paginate(12);
+        return view('shop.index', compact('products'));
     }
 
     /**
@@ -104,7 +97,6 @@ class ProductController extends Controller
             }
             $productPrefix = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $request->name), 0, 3));
 
-            // أ. إنشاء المنتج الأساسي في قاعدة البيانات
             $product = Product::create([
                 'brand_id'    => $request->brand_id,
                 'name'        => $request->name,
@@ -114,12 +106,10 @@ class ProductController extends Controller
                 'is_active'   => true,
             ]);
 
-            // ب. ربط المنتج بالتصنيفات (جدول category_product)
             $product->categories()->attach($request->category_ids);
 
             $variantMap = [];
 
-            // ج. إنشاء المتغيرات والمخازن التابعة لها وتوليد الـ SKU تلقائياً
             foreach ($request->variants as $index => $variantData) {
                 $attributeValues = array_values($variantData['attributes']);
                 $attributesPrefix = strtoupper(implode('-', array_filter($attributeValues)));
@@ -131,7 +121,6 @@ class ProductController extends Controller
                     $generatedSku = "{$brandPrefix}-{$productPrefix}-" . ($attributesPrefix ? "{$attributesPrefix}-" : "") . rand(1000, 9999);
                 }
 
-                // حفظ المتغير في جدول product_variants
                 $variant = $product->variants()->create([
                     'sku'              => $generatedSku,
                     'price'            => $variantData['price'],
@@ -149,11 +138,9 @@ class ProductController extends Controller
                 ]);
             }
 
-            // د. ربط ألبوم الصور بالمنتج والمتغيرات باستخدام المسارات الفيزيائية التي رُفعت بنجاح
             foreach ($uploadedImagesData as $img) {
                 $product->images()->create([
                     'variant_id'  => $img['variant_index'] !== null ? $variantMap[$img['variant_index']] : null,
-                    'image_path'  => $img['image_path'], // السلسلة النصية الآمنة المرجعة من نظام الملفات
                     'is_featured' => $img['is_featured'],
                     'sort_order'  => $img['sort_order'],
                 ]);

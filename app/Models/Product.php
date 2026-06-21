@@ -35,6 +35,12 @@ class Product extends Model
   public function images(): HasMany {
     return $this->hasMany(ProductImage::class);
   }
+  public function defaultVariant() {
+    return $this->hasOne(ProductVariant::class)->oldestOfMany();
+  }
+  public function featureImage() {
+    return $this->hasOne(ProductImage::class)->where('is_featured',true);
+  }
 
   // مراجعات وتقييمات العملاء
   public function reviews(): HasMany {

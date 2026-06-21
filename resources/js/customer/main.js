@@ -1,30 +1,61 @@
-document.addEventListener('DOMContentLoaded',function(){
-document.addEventListener('click',function(event){
-if(event.target && event.target.classList.contains('add-to-cart-btn'))
-{
-    event.preventDefault();
-    const button = event.target;
-    const variantId = event.getAttribute('data-variant-id');
-    const crsfToken = document.querySelector('meta[name="csrf-tokewn"]').getAttribute('content');
+document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("click", function (event) {
+        const button = event.target.closest(".btn-add-cart");
 
-    fetch('/cart/add',{
-method :'POST',
-headers:{
-    'Content-Type':'application/json',
-    'X-CSRF-TOKEN':crsfToken,
-    'Accept':'application/json'
-},
-body:JSON.stringify({
-    variant_id:variantId,
-    quantity:1
-})
-    }).then(respone=>{
-        if(!respone.ok){
-            throw new Error('حدث خطا في استجابه الخادم');
+        if (!button) return; 
+
+        event.preventDefault();
+
+        const variantId = button.getAttribute("data-variant-id");
+        const crsfTokenElement = document.querySelector(
+            'meta[name="csrf-token"]',
+        );
+
+        if (!crsfTokenElement) {
+            console.error("CSRF token meta tag is missing!");
+            return;
         }
-        return respone.json();
-    })
+        const crsfToken = crsfTokenElement.getAttribute("content");
+        fetch("/cart/add", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": crsfToken,
+                Accept: "application/json",
+            },
+            body: JSON.stringify({
+                variant_id: variantId,
+                quantity: 1,
+            }),
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    return response.json().then((err) => {
+                        throw err;
+                    });
+                }
+                return response.json();
+            })
+            .then((data) => {
+                if (data.success) {
+                    const cartCountElement =
+                        document.getElementById("cart-count");
+                    if (cartCountElement) {
+                        cartCountElement.innerText =
+                            Number(cartCountElement.innerText) + 1;
 
-}
-});
+                        cartCountElement.style.transition = "transform 0.2s";
+                        cartCountElement.style.transform = "scale(1.3)";
+                        setTimeout(() => {
+                            cartCountElement.style.transform = "scale(1)";
+                        }, 300);
+                    }
+                    console.log(data.message);
+                }
+            })
+            .catch((error) => {
+                console.error("Error Details:", error);
+                alert(error.message || "حدث خطأ أثناء إضافة المنتج.");
+            });
+    });
 });
