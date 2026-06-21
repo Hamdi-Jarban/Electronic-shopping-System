@@ -13,6 +13,8 @@ use PHPUnit\Metadata\Group;
 
 
 Route::get('/', [ProductController::class, 'home'])->name('index');
+
+
 Route::prefix('admin')->name('admin.')->group(function () {
 Route::get('/index', [AdminProductController::class, 'index'])->name('index');
 Route::get('/products/create',[AdminProductController::class,'create'])->name('products.create');
@@ -20,6 +22,7 @@ Route::get('/products/index',[AdminProductController::class,'index'])->name('pro
 Route::post('/products/store', [AdminProductController::class,'store'])->name('products.store');
 });
 
+Route::post('/cart/add', [AdminProductController::class,'store'])->name('products.store');
 
 //Route::resource('/products', ProductController::class);
 

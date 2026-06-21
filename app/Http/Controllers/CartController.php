@@ -6,6 +6,7 @@ use App\Models\Cart;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
+
 use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
@@ -19,8 +20,8 @@ class CartController extends Controller
   }
 
   /**
-  * حساب ملخص كامل للسلة
-  */
+   * حساب ملخص كامل للسلة
+   */
   private function getFullSummary(Cart $cart): array
   {
     $items = $cart->items()->with('productVariant.product')->get();
@@ -28,10 +29,10 @@ class CartController extends Controller
     $totalQuantity = $items->sum('quantity');
     $uniqueProducts = $items->count();
     $totalPrice = $items->sum(function ($item) {
-    return $item->quantity * ($item->productVariant->price ?? 0);
+      return $item->quantity * ($item->productVariant->price ?? 0);
     });
     $totalWeight = $items->sum(function ($item) {
-    return $item->quantity * ($item->productVariant->weight_kg ?? 0);
+      return $item->quantity * ($item->productVariant->weight_kg ?? 0);
     });
     $avgPrice = $totalQuantity > 0 ? $totalPrice / $totalQuantity : 0;
 
@@ -51,8 +52,8 @@ class CartController extends Controller
     $summary = $this->getFullSummary($cart);
 
     return view('shop.cart', array_merge(
-    compact('cart', 'cartItems'),
-    $summary
+      compact('cart', 'cartItems'),
+      $summary
     ));
   }
 
@@ -68,18 +69,18 @@ class CartController extends Controller
       $cartItem->increment('quantity', $quantity);
     } else {
       $cart->items()->create([
-      'variant_id' => $variantID,
-      'quantity'   => $quantity,
+        'variant_id' => $variantID,
+        'quantity'   => $quantity,
       ]);
     }
 
     $summary = $this->getFullSummary($cart);
 
     return response()->json([
-    'success' => true,
-    'message' => 'تمت الإضافة بنجاح',
-    'count'   => $summary['totalQuantity'],
-    'summary' => $summary,
+      'success' => true,
+      'message' => 'تمت الإضافة بنجاح',
+      'count'   => $summary['totalQuantity'],
+      'summary' => $summary,
     ]);
   }
 
@@ -94,9 +95,9 @@ class CartController extends Controller
     $summary = $this->getFullSummary($cart);
 
     return response()->json([
-    'success' => true,
-    'message' => 'تم تحديث الكمية',
-    'summary' => $summary,
+      'success' => true,
+      'message' => 'تم تحديث الكمية',
+      'summary' => $summary,
     ]);
   }
 
@@ -109,15 +110,15 @@ class CartController extends Controller
     $summary = $this->getFullSummary($cart);
 
     return response()->json([
-    'success' => true,
-    'message' => 'تم حذف المنتج',
-    'summary' => $summary,
+      'success' => true,
+      'message' => 'تم حذف المنتج',
+      'summary' => $summary,
     ]);
   }
 
   /**
-  * إرجاع عدد عناصر السلة فقط (للتحديث السريع)
-  */
+   * إرجاع عدد عناصر السلة فقط (للتحديث السريع)
+   */
   public function count(Request $request): JsonResponse
   {
     $cart = $this->getOrCreateCart($request);

@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\Product;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class ShopController extends Controller
 {
@@ -13,7 +16,6 @@ class ShopController extends Controller
   * Display a listing of the resource.
   */
   public function home() {
-  $cart = Cart
     return view('shop.index');
   }
   public function index() {

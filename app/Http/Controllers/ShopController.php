@@ -43,8 +43,6 @@ class ShopController extends Controller
     return view('customer.index', compact('categories'));
   }
 
-  public shop() {
-  }
 
 
   public function show($id) {
