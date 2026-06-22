@@ -4,25 +4,25 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
-class WarehouseSeeder extends Seeder
+class BrandSeeder extends Seeder
 {
     public function run(): void
     {
-        $warehouses = [];
-        for ($i = 0; $i < 10; $i++) {
-            $city = fake()->city();
-            $warehouses[] = [
-                'name' => 'مستودع ' . $city,
-                'code' => strtoupper(fake()->unique()->lexify('WH-???')),
-                'address' => fake()->address(),
-                'city' => $city,
-                'is_active' => true,
+        $brands = [];
+        for ($i = 0; $i < 50; $i++) {
+            $name = fake()->unique()->company();
+            $brands[] = [
+                'name' => $name,
+                'slug' => Str::slug($name),
+                'logo_url' => fake()->optional(0.7)->imageUrl(200, 200, 'brand', true),
+                'is_active' => fake()->boolean(80),
                 'created_at' => $this->randomDate(),
                 'updated_at' => now(),
             ];
         }
-        DB::table('warehouses')->insert($warehouses);
+        DB::table('brands')->insert($brands);
     }
 
     private function randomDate(): string

@@ -8,16 +8,19 @@ class ProductVariantFactory extends Factory
 {
     public function definition(): array
     {
-        $price = $this->faker->randomFloat(2, 10, 1000);
+        $attributes = [
+            'color' => fake()->safeColorName(),
+            'size' => fake()->randomElement(['صغير', 'متوسط', 'كبير', 'XL']),
+            'weight' => fake()->numberBetween(200, 2000) . 'g'
+        ];
         return [
-            'product_id' => \DB::table('products')->inRandomOrder()->first()?->id ?? 1,
-            'sku' => strtoupper($this->faker->unique()->bothify('SKU-#####-??')),
-            'price' => $price,
-            'compare_at_price' => $price * 1.2, // السعر قبل الخصم
-            'attributes' => json_encode([
-                'color' => $this->faker->safeColorName(),
-                'size' => $this->faker->randomElement(['S', 'M', 'L', 'XL', '40', '42', '44'])
-            ]),
+            'product_id' => null,
+            'sku' => strtoupper(fake()->unique()->ean8()),
+            'price' => fake()->randomFloat(2, 10, 500),
+            'compare_at_price' => fake()->optional(0.6)->randomFloat(2, 15, 600),
+            'attributes' => json_encode($attributes, JSON_UNESCAPED_UNICODE),
+            'created_at' => now(),
+            'updated_at' => now(),
         ];
     }
 }

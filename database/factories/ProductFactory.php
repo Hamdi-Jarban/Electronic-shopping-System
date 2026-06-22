@@ -3,22 +3,24 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
 
-class ProductFactory extends Factory
+class ProductVariantFactory extends Factory
 {
     public function definition(): array
     {
-        // التعديل: توليد اسم منتج من 3 كلمات عشوائية وجعل الحرف الأول كبيراً
-        $name = ucfirst($this->faker->words(3, true)); 
-        
+        $attributes = [
+            'color' => fake()->safeColorName(),
+            'size' => fake()->randomElement(['صغير', 'متوسط', 'كبير', 'XL']),
+            'weight' => fake()->numberBetween(200, 2000) . 'g'
+        ];
         return [
-            'brand_id' => \DB::table('brands')->inRandomOrder()->first()?->id ?? 1,
-            'name' => $name,
-            'slug' => Str::slug($name) . '-' . rand(100, 999),
-            'description' => $this->faker->paragraph(3),
-            'summary' => $this->faker->sentence(),
-            'is_active' => true,
+            'product_id' => null,
+            'sku' => strtoupper(fake()->unique()->ean8()),
+            'price' => fake()->randomFloat(2, 10, 500),
+            'compare_at_price' => fake()->optional(0.6)->randomFloat(2, 15, 600),
+            'attributes' => json_encode($attributes, JSON_UNESCAPED_UNICODE),
+            'created_at' => now(),
+            'updated_at' => now(),
         ];
     }
 }

@@ -3,17 +3,17 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
 
-class CategoryFactory extends Factory
+class WarehouseFactory extends Factory
 {
     public function definition(): array
     {
-        $name = fake()->unique()->words(2, true);
+        $city = fake()->city();
         return [
-            'parent_id' => null,
-            'name' => $name,
-            'slug' => Str::slug($name),
+            'name' => 'مستودع ' . $city,
+            'code' => strtoupper(fake()->unique()->lexify('WH-???')),
+            'address' => fake()->optional(0.8)->address(),
+            'city' => $city,
             'is_active' => fake()->boolean(90),
             'created_at' => $this->randomDate(),
             'updated_at' => now(),

@@ -1,8 +1,9 @@
+
 document.addEventListener("DOMContentLoaded", function () {
     document.addEventListener("click", function (event) {
         const button = event.target.closest(".btn-add-cart");
 
-        if (!button) return; 
+        if (!button) return;
 
         event.preventDefault();
 
@@ -15,7 +16,9 @@ document.addEventListener("DOMContentLoaded", function () {
             console.error("CSRF token meta tag is missing!");
             return;
         }
+
         const crsfToken = crsfTokenElement.getAttribute("content");
+
         fetch("/cart/add", {
             method: "POST",
             headers: {
@@ -40,16 +43,19 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (data.success) {
                     const cartCountElement =
                         document.getElementById("cart-count");
+
                     if (cartCountElement) {
                         cartCountElement.innerText =
                             Number(cartCountElement.innerText) + 1;
 
                         cartCountElement.style.transition = "transform 0.2s";
                         cartCountElement.style.transform = "scale(1.3)";
+
                         setTimeout(() => {
                             cartCountElement.style.transform = "scale(1)";
                         }, 300);
                     }
+
                     console.log(data.message);
                 }
             })
