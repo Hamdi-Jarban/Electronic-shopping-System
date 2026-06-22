@@ -9,6 +9,7 @@ class CouponSeeder extends Seeder
 {
     public function run(): void
     {
+    fake()->locale('ar_SA');
         $coupons = [];
         for ($i = 0; $i < 50; $i++) {
             $type = fake()->randomElement(['fixed', 'percentage']);

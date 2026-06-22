@@ -10,32 +10,34 @@ class BrandSeeder extends Seeder
 {
     public function run(): void
     {
+        fake()->locale('ar_SA');
+
+        $arabicBrands = [
+            'الأصالة', 'الريادة', 'الفخامة', 'التميز', 'النجاح',
+            'الأناقة', 'الذوق الرفيع', 'الجودة', 'الإبداع', 'التراث',
+            'العصرية', 'الخليج', 'العربية', 'الشرقية', 'الغربية',
+            'النخبة', 'الصدارة', 'المستقبل', 'النور', 'الزهراء',
+            'اليمامة', 'السروات', 'الجزيرة', 'الواحة', 'النخيل',
+            'الرياض', 'الحجاز', 'نجد', 'تهامة', 'العقيق',
+            'اللؤلؤ', 'المرجان', 'الياقوت', 'الزمرد', 'الماس',
+            'الفيروز', 'العنبر', 'المسك', 'العود', 'الورد',
+            'الريحان', 'الياسمين', 'الفل', 'الخزامى', 'النرجس',
+            'السيف', 'الدرع', 'الفارس', 'الصقر', 'العقاب',
+        ];
+
         $brands = [];
-        for ($i = 0; $i < 50; $i++) {
-            $name = fake()->unique()->company();
+        foreach ($arabicBrands as $name) {
             $brands[] = [
-                'name' => $name,
-                'slug' => Str::slug($name),
-                'logo_url' => fake()->optional(0.7)->imageUrl(200, 200, 'brand', true),
-                'is_active' => fake()->boolean(80),
-                'created_at' => $this->randomDate(),
-                'updated_at' => now(),
+                'name'       => $name,
+                'slug'       => Str::slug($name) . '-' . fake()->numberBetween(10, 99),
+                'logo_url'   => fake()->boolean(70) ? 'brands/' . Str::slug($name) . '.png' : null,
+                'is_active'  => true,
+                'created_at' => fake()->dateTimeBetween('-2 years', 'now')->format('Y-m-d H:i:s'),
+                'updated_at' => now()->toDateTimeString(),
             ];
         }
+
         DB::table('brands')->insert($brands);
+        $this->command->info('✅ ' . count($brands) . ' علامة تجارية عربية تم إنشاؤها.');
     }
-
-    private function randomDate(): string
-{
-    $dates = [
-        now()->toDateTimeString(),
-        now()->subDay()->toDateTimeString(),
-        now()->subDays(2)->toDateTimeString(),
-        now()->subWeek()->toDateTimeString(),
-        now()->subMonth()->toDateTimeString(),
-        fake()->dateTimeBetween('-1 year', 'now')->format('Y-m-d H:i:s'),
-    ];
-
-    return fake()->randomElement($dates);
-}
 }

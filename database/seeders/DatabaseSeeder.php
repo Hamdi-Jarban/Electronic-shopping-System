@@ -3,26 +3,40 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class DatabaseSeeder extends Seeder
 {
-  public function run(): void
-  {
-    $this->command->info('بدء عملية إدخال البيانات...');
+    public function run(): void
+    {
+        fake()->locale('ar_SA');
 
-    $this->call([
-    RolePermissionSeeder::class,
-    WarehouseSeeder::class,      // قبل UserSeeder (لربط المستخدمين)
-    BrandSeeder::class,
-    CategorySeeder::class,
-    CouponSeeder::class,
-    UserSeeder::class,           // بعد WarehouseSeeder
-    ProductSeeder::class,        // بعد Brand, Category, User
-    CartSeeder::class,           // بعد ProductVariant
-    OrderSeeder::class,          // بعد User, Coupon, Warehouse, ProductVariant
-    InventoryMovementSeeder::class, // بعد Warehouse, ProductVariant, User
-    ]);
+        $this->command->info('🚀 بدء إدخال البيانات باللغة العربية...');
+        $this->command->info('⏳ هذه العملية قد تستغرق بضع دقائق...');
 
-    $this->command->info('تم إدخال جميع البيانات بنجاح! 🎉');
-  }
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+
+        $this->call([
+            RolePermissionSeeder::class,
+            WarehouseSeeder::class,
+            BrandSeeder::class,
+            CategorySeeder::class,
+            CouponSeeder::class,
+            UserSeeder::class,
+            ProductSeeder::class,
+            CartSeeder::class,
+            OrderSeeder::class,
+            InventoryMovementSeeder::class,
+        ]);
+
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
+        $this->command->info('✅ تم إدخال جميع البيانات بنجاح!');
+        $this->command->info('📊 الإحصائيات:');
+        $this->command->info('   - المستخدمون: ' . DB::table('users')->count());
+        $this->command->info('   - المنتجات: ' . DB::table('products')->count());
+        $this->command->info('   - الطلبات: ' . DB::table('orders')->count());
+        $this->command->info('   - عناصر السلة: ' . DB::table('cart_items')->count());
+        $this->command->info('   - المراجعات: ' . DB::table('product_reviews')->count());
+    }
 }

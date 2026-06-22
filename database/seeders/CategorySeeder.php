@@ -10,52 +10,55 @@ class CategorySeeder extends Seeder
 {
     public function run(): void
     {
+        fake()->locale('ar_SA');
+
+        $mainCategories = [
+            'ملابس', 'أحذية', 'حقائب', 'إكسسوارات', 'عطور',
+            'عناية بالبشرة', 'مستحضرات تجميل', 'ساعات', 'نظارات', 'مجوهرات',
+            'إلكترونيات', 'أجهزة منزلية', 'أثاث', 'مستلزمات رياضية', 'كتب',
+            'ألعاب', 'مواد غذائية', 'مشروبات', 'هدايا', 'منتجات فاخرة',
+        ];
+
         // فئات رئيسية
         $parents = [];
-        for ($i = 0; $i < 20; $i++) {
-            $name = fake()->unique()->words(2, true);
+        foreach ($mainCategories as $name) {
             $parents[] = [
-                'parent_id' => null,
-                'name' => $name,
-                'slug' => Str::slug($name),
-                'is_active' => true,
-                'created_at' => $this->randomDate(),
-                'updated_at' => now(),
+                'parent_id'  => null,
+                'name'       => $name,
+                'slug'       => Str::slug($name) . '-' . fake()->numberBetween(10, 99),
+                'is_active'  => true,
+                'created_at' => now()->toDateTimeString(),
+                'updated_at' => now()->toDateTimeString(),
             ];
         }
-        DB::table('categories')->insert($parents);
-        $parentIds = DB::table('categories')->pluck('id');
 
-        // 3-5 فئات فرعية لكل رئيسية
+        DB::table('categories')->insert($parents);
+        $parentIds = DB::table('categories')->pluck('id')->toArray();
+
+        // فئات فرعية
+        $subCategories = [
+            'رجالي', 'نسائي', 'أطفال', 'رياضي', 'كلاسيكي',
+            'عصري', 'فاخر', 'يومي', 'موسمي', 'رسمي',
+            'صيفي', 'شتوي', 'ربيعي', 'خريفي', 'كاجوال',
+        ];
+
         $children = [];
         foreach ($parentIds as $parentId) {
             $count = rand(3, 5);
             for ($j = 0; $j < $count; $j++) {
-                $name = fake()->unique()->words(2, true);
+                $subName = fake()->randomElement($subCategories) . ' ' . fake()->randomElement($mainCategories);
                 $children[] = [
-                    'parent_id' => $parentId,
-                    'name' => $name,
-                    'slug' => Str::slug($name),
-                    'is_active' => fake()->boolean(90),
-                    'created_at' => $this->randomDate(),
-                    'updated_at' => now(),
+                    'parent_id'  => $parentId,
+                    'name'       => $subName,
+                    'slug'       => Str::slug($subName) . '-' . fake()->numberBetween(10, 999),
+                    'is_active'  => fake()->boolean(90),
+                    'created_at' => now()->toDateTimeString(),
+                    'updated_at' => now()->toDateTimeString(),
                 ];
             }
         }
+
         DB::table('categories')->insert($children);
+        $this->command->info('✅ ' . count($parents) . ' فئة رئيسية و ' . count($children) . ' فئة فرعية تم إنشاؤها.');
     }
-
-    private function randomDate(): string
-{
-    $dates = [
-        now()->toDateTimeString(),
-        now()->subDay()->toDateTimeString(),
-        now()->subDays(2)->toDateTimeString(),
-        now()->subWeek()->toDateTimeString(),
-        now()->subMonth()->toDateTimeString(),
-        fake()->dateTimeBetween('-1 year', 'now')->format('Y-m-d H:i:s'),
-    ];
-
-    return fake()->randomElement($dates);
-}
 }

@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 class CartSeeder extends Seeder
 {
     public function run(): void
-    {
+    {  fake()->locale('ar_SA');
         $this->command->info('🛒 بدء إنشاء عناصر السلة...');
 
         $userIds    = DB::table('users')->pluck('id')->toArray();

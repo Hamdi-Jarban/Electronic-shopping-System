@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 class InventoryMovementSeeder extends Seeder
 {
     public function run(): void
-    {
+    {fake()->locale('ar_SA');
         $warehouseIds = DB::table('warehouses')->pluck('id');
         $variantIds = DB::table('product_variants')->pluck('id');
         $userIds = DB::table('users')->pluck('id');

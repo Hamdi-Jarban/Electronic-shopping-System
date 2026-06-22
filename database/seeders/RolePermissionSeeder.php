@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 class RolePermissionSeeder extends Seeder
 {
     public function run(): void
-    {
+    {fake()->locale('ar_SA');
         $roles = [
             ['name' => 'admin', 'display_name' => 'مدير النظام', 'description' => 'صلاحيات كاملة', 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'manager', 'display_name' => 'مدير', 'description' => 'إدارة الفرق', 'created_at' => now(), 'updated_at' => now()],

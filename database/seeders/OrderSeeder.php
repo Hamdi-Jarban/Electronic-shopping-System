@@ -17,6 +17,7 @@ class OrderSeeder extends Seeder
 
     public function run(): void
     {
+    fake()->locale('ar_SA');
         $this->command->info('🚀 بدء إنشاء الطلبات...');
 
         // ─── جلب البيانات المرجعية ─────────────────────────────
