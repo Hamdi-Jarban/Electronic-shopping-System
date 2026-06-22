@@ -4,20 +4,17 @@ namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Payment>
- */
 class PaymentFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
-            //
+            'order_id' => null,
+            'gateway' => fake()->randomElement(['بطاقة ائتمانية', 'مدى', 'تحويل بنكي']),
+            'transaction_id' => strtoupper(fake()->unique()->lexify('TXN??????')),
+            'status' => 'completed',
+            'amount' => 0, // يملأ لاحقاً
+            'created_at' => now(),
         ];
     }
 }

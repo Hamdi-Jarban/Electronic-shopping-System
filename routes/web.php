@@ -13,7 +13,8 @@ use PHPUnit\Metadata\Group;
 
 
 
-Route::get('/', [ShopController::class, 'index'])->name('index');
+Route::get('/', [ProductController::class, 'index'])->name('index');
+Route::get('/products/{slug}', [ProductController::class, 'showSingleProduct'])->name('products.show');
 
 
 Route::prefix('admin')->name('admin.')->group(function () {

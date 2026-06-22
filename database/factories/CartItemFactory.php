@@ -3,16 +3,20 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
-class OrderItemFactory extends Factory
+class CartItemFactory extends Factory
 {
     public function definition(): array
     {
+        $useUser = fake()->boolean(70);
         return [
-            'order_id' => null,
+            'user_id' => $useUser ? null : null,
+            'session_token' => !$useUser ? Str::random(40) : null,
             'variant_id' => null,
-            'quantity' => fake()->numberBetween(1, 3),
-            'price' => 0, // يُحسب لاحقاً
+            'quantity' => fake()->numberBetween(1, 5),
+            'created_at' => now(),
+            'updated_at' => now(),
         ];
     }
 }

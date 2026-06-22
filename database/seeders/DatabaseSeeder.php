@@ -7,9 +7,11 @@ use Illuminate\Support\Facades\DB;
 
 class DatabaseSeeder extends Seeder
 {
+
     public function run(): void
     {
         fake()->locale('ar_SA');
+
 
         $this->command->info('🚀 بدء إدخال البيانات باللغة العربية...');
         $this->command->info('⏳ هذه العملية قد تستغرق بضع دقائق...');
