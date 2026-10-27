@@ -17,6 +17,10 @@ class Order extends Model
     'total_amount',
     'discount_amount',
     'net_amount',
+    'customer_name',
+    'customer_phone',
+    'shipping_address',
+    'notes',
     'created_at'];
 
   public function user(): BelongsTo {

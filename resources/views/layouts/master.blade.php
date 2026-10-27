@@ -219,9 +219,9 @@
                 data-lucide="user"></i> حسابي</a>
         <a href="#" style="display:flex; align-items:center; gap:0.5rem; padding:0.5rem;"><i
                 data-lucide="heart"></i> المفضلة (3)</a>
-        <a href="#" style="display:flex; align-items:center; gap:0.5rem; padding:0.5rem;"><i
-                data-lucide="shopping-cart">{{ $cartCount }}</i> السلة (2) - 1,250 ر.س</a>
+        <a href="{{ route('cart.index') }}" style="display:flex; align-items:center; gap:0.5rem; padding:0.5rem;"><i data-lucide="shopping-cart"></i> السلة ({{ $cartCount ?? 0 }})</a>
     </div>
+    @if (session('order_number'))<div role="status" class="container">تم تسجيل طلبك برقم {{ session('order_number') }}.</div>@endif
     @yield('content')
     @vite('resources/js/master.js')
     @vite('resources/js/customer/main.js')

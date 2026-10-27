@@ -2,9 +2,10 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\View;
 use App\Models\CartItem;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -15,18 +16,18 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // مشاركة عداد السلة تلقائياً مع الهيكل الرئيسي في كل الصفحات
-        View::composer('*', function ($view) {
-            $cartCount = 0;
-            
-            // تحقق إذا كان العميل مسجل دخول أو لديه جلسة زائر مجهزة
-            if (auth()->check() || session()->has('_token')) {
-                $cartCount = CartItem::where('user_id', auth()->id())
-                    ->orWhere('session_token', session()->getId())
-                    ->sum('quantity');
-            }
+        Gate::define('manage-products', fn ($user) => $user->roles()->where('name', 'admin')->exists());
 
-            $view->with('cartCount', $cartCount);
+        View::composer('*', function ($view) {
+            $query = CartItem::query();
+            if (auth()->check()) {
+                $query->where('user_id', auth()->id());
+            } elseif (session()->has('cart_session_token')) {
+                $query->where('session_token', session('cart_session_token'));
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+            $view->with('cartCount', (int) $query->sum('quantity'));
         });
     }
 }

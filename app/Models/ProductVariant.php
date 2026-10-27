@@ -33,6 +33,6 @@ class ProductVariant extends Model
     return $this->hasMany(OrderItem::class, 'variant_id','id');
   }
   public function inventories(): HasMany {
-    return $this->hasMany(InventoryMovement::class, 'variant_id','id');
+    return $this->hasMany(WarehouseInventory::class, 'variant_id', 'id');
   }
 }

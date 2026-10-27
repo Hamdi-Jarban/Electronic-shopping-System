@@ -41,7 +41,7 @@ class UserSeeder extends Seeder
 
         // الروابط
         $userIds    = DB::table('users')->pluck('id')->toArray();
-        $roleIds    = DB::table('roles')->pluck('id')->toArray();
+        $customerRoleId = DB::table('roles')->where('name', 'customer')->value('id');
         $warehouseIds = DB::table('warehouses')->pluck('id')->toArray();
 
         $roleUser      = [];
@@ -51,10 +51,9 @@ class UserSeeder extends Seeder
         $this->command->info('🔗 ربط الأدوار والمستودعات والعناوين...');
 
         foreach ($userIds as $userId) {
-            // أدوار
-            $assignedRoles = (array) array_rand(array_flip($roleIds), rand(1, min(2, count($roleIds))));
-            foreach ($assignedRoles as $roleId) {
-                $roleUser[] = ['user_id' => $userId, 'role_id' => $roleId];
+            // الحسابات المولّدة للتطوير عملاء فقط؛ لا تُمنح صلاحيات الإدارة عشوائياً.
+            if ($customerRoleId) {
+                $roleUser[] = ['user_id' => $userId, 'role_id' => $customerRoleId];
             }
 
             // مستودعات
