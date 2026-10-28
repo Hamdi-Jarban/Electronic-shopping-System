@@ -14,6 +14,7 @@ class UserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'password' => Hash::make('password'),
             'phone' => fake()->optional(0.9)->phoneNumber(),
+            'email_verified_at' => now(),
             'created_at' => $this->randomDate(),
             'updated_at' => now(),
         ];
@@ -21,7 +22,11 @@ class UserFactory extends Factory
 
     private function randomDate(): string
     {
-        $dates = [now(), now()->subDay(), now()->subDays(2), now()->subWeek(), now()->subMonth(), fake()->dateTimeBetween('-1 year', 'now')];
-        return fake()->randomElement($dates);
+        return fake()->dateTimeBetween('-1 year', 'now')->format('Y-m-d H:i:s');
+    }
+
+    public function unverified(): static
+    {
+        return $this->state(fn () => ['email_verified_at' => null]);
     }
 }
