@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CartItem;
 use App\Models\Order;
+use App\Models\OrderInventoryReservation;
 use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -33,6 +34,7 @@ class OrderController extends Controller
             }
 
             $total = 0.0;
+            $allocations = [];
             foreach ($items as $item) {
                 $variant = $item->variant;
                 if (!$variant || !$variant->product || !$variant->product->is_active) {
@@ -44,11 +46,13 @@ class OrderController extends Controller
                     throw ValidationException::withMessages(['cart' => 'المخزون غير كافٍ للمنتج: '.$variant->product->name]);
                 }
                 $remaining = $item->quantity;
+                $allocations[$item->id] = [];
                 foreach ($inventories as $inventory) {
                     $free = max(0, $inventory->physical_qty - $inventory->reserved_qty);
                     $reserve = min($free, $remaining);
                     if ($reserve > 0) {
                         DB::table('warehouse_inventory')->where('id', $inventory->id)->update(['reserved_qty' => $inventory->reserved_qty + $reserve]);
+                        $allocations[$item->id][] = ['inventory_id' => $inventory->id, 'quantity' => $reserve];
                         $remaining -= $reserve;
                     }
                     if ($remaining === 0) break;
@@ -69,12 +73,19 @@ class OrderController extends Controller
                 'notes' => $data['notes'] ?? null,
             ]);
             foreach ($items as $item) {
-                OrderItem::create([
+                $orderItem = OrderItem::create([
                     'order_id' => $order->id,
                     'variant_id' => $item->variant_id,
                     'quantity' => $item->quantity,
                     'price' => $item->variant->price,
                 ]);
+                foreach ($allocations[$item->id] as $allocation) {
+                    OrderInventoryReservation::create([
+                        'order_item_id' => $orderItem->id,
+                        'warehouse_inventory_id' => $allocation['inventory_id'],
+                        'quantity' => $allocation['quantity'],
+                    ]);
+                }
             }
             CartItem::whereIn('id', $items->pluck('id'))->delete();
             return $order;
