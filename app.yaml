@@ -1,0 +1,12 @@
+kind: wasmer.io/App.v0
+name: electronic-shopping-system
+owner: YOUR_WASMER_USERNAME
+package: .
+capabilities:
+  database:
+    engine: mysql
+scaling:
+  mode: single_concurrency
+volumes:
+  - name: product-uploads
+    mount: /app/storage/app/public
