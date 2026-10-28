@@ -8,8 +8,8 @@ use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
 
 class CartController extends Controller
 {
@@ -18,12 +18,14 @@ class CartController extends Controller
         if (!Session::has('cart_session_token')) {
             Session::put('cart_session_token', (string) Str::uuid());
         }
+
         return (string) Session::get('cart_session_token');
     }
 
     public function index()
     {
         $items = $this->ownedItems()->with('variant.product.featureImage')->get();
+
         return view('cart.index', compact('items'));
     }
 
@@ -33,6 +35,7 @@ class CartController extends Controller
         if ($items->isEmpty()) {
             return redirect()->route('cart.index')->with('error', 'السلة فارغة.');
         }
+
         return view('checkout.index', compact('items'));
     }
 
@@ -45,9 +48,10 @@ class CartController extends Controller
         $quantity = (int) ($data['quantity'] ?? 1);
         $userId = Auth::id();
         $token = $userId ? null : $this->sessionToken();
+        $mergeSummary = ['adjusted' => 0, 'skipped' => 0];
 
         if ($userId && Session::has('cart_session_token')) {
-            $this->mergeGuestCart($userId, (string) Session::get('cart_session_token'));
+            $mergeSummary = $this->mergeGuestCart($userId, (string) Session::get('cart_session_token'));
             Session::forget('cart_session_token');
         }
 
@@ -55,10 +59,12 @@ class CartController extends Controller
         abort_unless($variant->product->is_active, 404);
 
         DB::transaction(function () use ($variant, $quantity, $userId, $token) {
-            $available = (int) DB::table('warehouse_inventory')
+            $inventories = DB::table('warehouse_inventory')
                 ->where('variant_id', $variant->id)
-                ->selectRaw('COALESCE(SUM(physical_qty - reserved_qty), 0) as available')
-                ->value('available');
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
+            $available = (int) $inventories->sum(fn ($inventory) => max(0, $inventory->physical_qty - $inventory->reserved_qty));
             if ($available < 1) {
                 abort(422, 'هذا المنتج غير متوفر في المخزون.');
             }
@@ -70,13 +76,29 @@ class CartController extends Controller
             if ($newQuantity > $available) {
                 abort(422, 'الكمية المطلوبة تتجاوز المخزون المتاح ('.$available.').');
             }
+
             if ($item) {
                 $item->update(['quantity' => $newQuantity]);
             } else {
-                CartItem::create(['user_id' => $userId, 'session_token' => $token, 'variant_id' => $variant->id, 'quantity' => $quantity]);
+                CartItem::create([
+                    'user_id' => $userId,
+                    'session_token' => $token,
+                    'variant_id' => $variant->id,
+                    'quantity' => $quantity,
+                ]);
             }
-        });
-        return response()->json(['success' => true, 'message' => 'تمت الإضافة إلى السلة.', 'cart_count' => $this->ownedItems()->sum('quantity')]);
+        }, 3);
+
+        $message = $mergeSummary['adjusted'] > 0 || $mergeSummary['skipped'] > 0
+            ? 'تمت الإضافة. عُدّلت بعض كميات السلة لتناسب المخزون المتاح.'
+            : 'تمت الإضافة إلى السلة.';
+
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'cart_count' => $this->ownedItems()->sum('quantity'),
+            'cart_merge' => $mergeSummary,
+        ]);
     }
 
     private function ownedItems()
@@ -86,19 +108,65 @@ class CartController extends Controller
             : CartItem::where('session_token', $this->sessionToken());
     }
 
-    private function mergeGuestCart(int $userId, string $token): void
+    /** Merge guest items without letting their combined quantity exceed current stock. */
+    private function mergeGuestCart(int $userId, string $token): array
     {
-        DB::transaction(function () use ($userId, $token) {
-            $guestItems = CartItem::where('session_token', $token)->lockForUpdate()->get();
+        return DB::transaction(function () use ($userId, $token) {
+            $summary = ['merged' => 0, 'adjusted' => 0, 'skipped' => 0];
+            $guestItems = CartItem::where('session_token', $token)
+                ->orderBy('variant_id')
+                ->lockForUpdate()
+                ->get();
+
             foreach ($guestItems as $guestItem) {
-                $userItem = CartItem::where('user_id', $userId)->where('variant_id', $guestItem->variant_id)->lockForUpdate()->first();
-                if ($userItem) {
-                    $userItem->increment('quantity', $guestItem->quantity);
+                $variant = ProductVariant::with('product')->find($guestItem->variant_id);
+                $userItem = CartItem::where('user_id', $userId)
+                    ->where('variant_id', $guestItem->variant_id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$variant || !$variant->product || !$variant->product->is_active) {
                     $guestItem->delete();
+                    if ($userItem) {
+                        $userItem->delete();
+                    }
+                    $summary['skipped']++;
+                    continue;
+                }
+
+                $inventories = DB::table('warehouse_inventory')
+                    ->where('variant_id', $variant->id)
+                    ->orderBy('id')
+                    ->lockForUpdate()
+                    ->get();
+                $available = (int) $inventories->sum(fn ($inventory) => max(0, $inventory->physical_qty - $inventory->reserved_qty));
+                $requested = (int) ($userItem?->quantity ?? 0) + (int) $guestItem->quantity;
+                $finalQuantity = min($requested, $available);
+
+                if ($finalQuantity > 0) {
+                    if ($userItem) {
+                        $userItem->update(['quantity' => $finalQuantity]);
+                    } else {
+                        $guestItem->update(['user_id' => $userId, 'session_token' => null, 'quantity' => $finalQuantity]);
+                    }
+                    $summary['merged']++;
+                } elseif ($userItem) {
+                    $userItem->delete();
+                    $summary['skipped']++;
                 } else {
-                    $guestItem->update(['user_id' => $userId, 'session_token' => null]);
+                    $summary['skipped']++;
+                }
+
+                if ($finalQuantity < $requested) {
+                    $summary['adjusted']++;
+                }
+
+                if ($userItem || $finalQuantity === 0) {
+                    $guestItem->delete();
                 }
             }
-        });
+
+            return $summary;
+        }, 3);
     }
 }
