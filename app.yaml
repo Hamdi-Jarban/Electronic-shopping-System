@@ -1,6 +1,6 @@
 kind: wasmer.io/App.v0
 name: electronic-shopping-system
-owner: YOUR_WASMER_USERNAME
+owner: hamdi-jarban
 package: .
 capabilities:
   database:
