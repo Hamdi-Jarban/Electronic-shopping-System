@@ -83,7 +83,7 @@ class WarehouseInventorySeeder extends Seeder
                     DB::table('inventory_movements')->insert($movementRows);
                 }
                 $created += count($inventoryRows);
-            }, 'variants.id');
+            }, 'variants.id', 'id');
 
         $this->command?->info("تم إعداد المخزون التجريبي لـ {$created} متغير (10 وحدات للمتغيرات الناقصة فقط).");
     }

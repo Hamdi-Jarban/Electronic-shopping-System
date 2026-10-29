@@ -27,7 +27,7 @@ class CartActionsTest extends TestCase
 
     public function test_customer_cannot_increase_cart_quantity_above_current_stock(): void
     {
-        [$user, $variant, $inventory, $item] = $this->makeCartItem(2, 1);
+        [$user, $variant, $inventory, $item] = $this->makeCartItem(2, 2);
         $response = $this->actingAs($user)->patchJson(route('cart.update', $item), ['quantity' => 3]);
 
         $response->assertUnprocessable()->assertJsonPath('success', false);
