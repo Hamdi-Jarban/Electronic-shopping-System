@@ -1,7 +1,13 @@
 kind: wasmer.io/App.v0
 name: electronic-shopping-system
-owner: YOUR_WASMER_USERNAME
+owner: hamdi-jarban
 package: .
+annotations:
+  anybuild.run/config:
+    commands:
+      build: "composer run-script post-autoload-dump && npm run build && (rm -f public/storage && ln -s ../storage/app/public public/storage)"
+      start: "php -S localhost:8080 -t public"
+      after_deploy: "php artisan migrate --force"
 capabilities:
   database:
     engine: mysql
