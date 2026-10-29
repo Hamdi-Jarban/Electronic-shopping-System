@@ -16,11 +16,11 @@
         </nav>
         <section class="product-detail">
             <div class="product-detail__image-wrap">
-                <img class="product-detail__image" src="{{ $imageUrl }}" alt="{{ $product->name }}">
+                <img class="product-detail__image" src="{{ $imageUrl }}" alt="{{ $product->name }}" onerror="this.onerror=null;this.src='{{ asset('images/product-placeholder.svg') }}'">
                 @if ($product->images->count() > 1)
                     <div class="product-detail__thumbnails" aria-label="صور المنتج">
                         @foreach ($product->images as $image)
-                            <button type="button" class="product-thumbnail {{ $image->image_path === ($featuredImage?->image_path) ? 'is-active' : '' }}" data-image="{{ asset('storage/' . $image->image_path) }}" aria-label="عرض صورة المنتج"><img src="{{ asset('storage/' . $image->image_path) }}" alt=""></button>
+                            <button type="button" class="product-thumbnail {{ $image->image_path === ($featuredImage?->image_path) ? 'is-active' : '' }}" data-image="{{ asset('storage/' . $image->image_path) }}" aria-label="عرض صورة المنتج"><img src="{{ asset('storage/' . $image->image_path) }}" alt="" onerror="this.onerror=null;this.src='{{ asset('images/product-placeholder.svg') }}'"></button>
                         @endforeach
                     </div>
                 @endif
@@ -37,7 +37,7 @@
                     <p class="product-detail__summary">{{ $product->description }}</p>
                 @endif
                 @if ($product->variants->isNotEmpty())
-                    <form class="add-to-cart-form product-detail__form" action="{{ route('cart.add') }}" method="POST" data-cart-form>
+                    <form class="add-to-cart-form product-detail__form" action="{{ route('cart.add', [], false) }}" method="POST" data-cart-form>
                         @csrf
                         <label class="shop-label" for="variant_id">الخيار</label>
                         <select id="variant_id" name="variant_id" class="shop-select" required>

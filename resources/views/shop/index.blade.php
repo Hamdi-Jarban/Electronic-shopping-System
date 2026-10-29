@@ -24,7 +24,7 @@
                     @endphp
                     <article class="product-card">
                         <a class="product-card__image" href="{{ route('products.show', $product->slug) }}" aria-label="تفاصيل {{ $product->name }}">
-                            <img src="{{ $imageUrl }}" alt="{{ $product->name }}" loading="lazy">
+                            <img src="{{ $imageUrl }}" alt="{{ $product->name }}" loading="lazy" onerror="this.onerror=null;this.src='{{ asset('images/product-placeholder.svg') }}'">
                             @if ($discount)<span class="product-discount">خصم {{ $discount }}٪</span>@endif
                         </a>
                         <div class="product-card__body">
@@ -40,7 +40,7 @@
                             <div class="product-card__actions">
                                 <a class="shop-button shop-button--secondary" href="{{ route('products.show', $product->slug) }}">عرض التفاصيل</a>
                                 @if ($variant && $available > 0)
-                                    <form class="add-to-cart-form" action="{{ route('cart.add') }}" method="POST" data-cart-form>
+                                    <form class="add-to-cart-form" action="{{ route('cart.add', [], false) }}" method="POST" data-cart-form>
                                         @csrf<input type="hidden" name="variant_id" value="{{ $variant->id }}"><input type="hidden" name="quantity" value="1">
                                         <button class="shop-button shop-button--primary" type="submit">أضف للسلة</button>
                                         <p class="cart-feedback" data-cart-feedback role="status" aria-live="polite"></p>

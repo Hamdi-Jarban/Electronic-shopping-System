@@ -40,7 +40,7 @@
                         $imageUrl = $image ? asset('storage/' . $image->image_path) : 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=240&h=240&fit=crop';
                     @endphp
                     <article class="cart-product {{ $itemValid ? '' : 'cart-product--warning' }}" data-cart-row data-item-id="{{ $item->id }}" data-unit-price="{{ $unitPrice }}" data-available-quantity="{{ $item->available_quantity }}" data-current-quantity="{{ $item->quantity }}" data-product-available="{{ $item->product_available ? '1' : '0' }}">
-                        <a class="cart-product__image" href="{{ $product?->is_active ? route('products.show', $product->slug) : route('index') }}"><img src="{{ $imageUrl }}" alt="{{ $product?->name ?? 'منتج' }}" loading="lazy"></a>
+                        <a class="cart-product__image" href="{{ $product?->is_active ? route('products.show', $product->slug) : route('index') }}"><img src="{{ $imageUrl }}" alt="{{ $product?->name ?? 'منتج' }}" loading="lazy" onerror="this.onerror=null;this.src='{{ asset('images/product-placeholder.svg') }}'"></a>
                         <div class="cart-product__main">
                             <div class="cart-product__heading">
                                 <div><h2><a href="{{ $product?->is_active ? route('products.show', $product->slug) : route('index') }}">{{ $product?->name ?? 'منتج لم يعد متاحًا' }}</a></h2><p class="cart-product__sku">رمز المنتج: {{ $item->variant?->sku ?? '—' }}</p></div>
@@ -63,7 +63,7 @@
                                 @endif
                             </p>
                             <div class="cart-product__bottom">
-                                <form class="cart-quantity-form" action="{{ route('cart.update', $item) }}" method="POST" data-cart-update-form>
+                                <form class="cart-quantity-form" action="{{ route('cart.update', $item, false) }}" method="POST" data-cart-update-form>
                                     @csrf @method('PATCH')
                                     <label for="quantity-{{ $item->id }}">الكمية</label>
                                     <div class="cart-quantity-control">
@@ -73,7 +73,7 @@
                                 </form>
                                 <div class="cart-product__price"><span>{{ number_format($unitPrice, 2) }} ر.س للقطعة</span><strong data-line-total>{{ number_format($subtotalForItem, 2) }} ر.س</strong></div>
                             </div>
-                            <form action="{{ route('cart.remove', $item) }}" method="POST" class="cart-remove-form" data-cart-remove-form hidden>@csrf @method('DELETE')</form>
+                            <form action="{{ route('cart.remove', $item, false) }}" method="POST" class="cart-remove-form" data-cart-remove-form hidden>@csrf @method('DELETE')</form>
                             <p class="cart-feedback" data-cart-feedback role="status" aria-live="polite"></p>
                         </div>
                     </article>
@@ -159,7 +159,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (button) { button.disabled = true; button.textContent = 'جارٍ الحفظ…'; }
             feedback(row, '');
             try {
-                const response = await fetch(form.action, {
+                const actionUrl = new URL(form.action, window.location.href);
+                actionUrl.protocol = window.location.protocol;
+                const response = await fetch(actionUrl.toString(), {
                     method: 'POST',
                     headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                     body: new FormData(form),

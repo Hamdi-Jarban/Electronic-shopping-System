@@ -17,7 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             try {
-                const response = await fetch(form.action, {
+                const actionUrl = new URL(form.action, window.location.href);
+                actionUrl.protocol = window.location.protocol;
+                const response = await fetch(actionUrl.toString(), {
                     method: 'POST',
                     headers: {
                         'Accept': 'application/json',
