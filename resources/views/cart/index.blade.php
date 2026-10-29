@@ -4,6 +4,7 @@
 <main class="container" dir="rtl">
     <h1>سلة التسوق</h1>
     @if (session('error'))<p role="alert">{{ session('error') }}</p>@endif
+    @if (session('success'))<p class="shop-notice" role="status">{{ session('success') }}</p>@endif
     @if ($items->isEmpty())
         <p>سلتك فارغة حالياً.</p><a href="{{ route('index') }}">متابعة التسوق</a>
     @else

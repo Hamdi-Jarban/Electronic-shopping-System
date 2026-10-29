@@ -93,12 +93,18 @@ class CartController extends Controller
             ? 'تمت الإضافة. عُدّلت بعض كميات السلة لتناسب المخزون المتاح.'
             : 'تمت الإضافة إلى السلة.';
 
-        return response()->json([
-            'success' => true,
-            'message' => $message,
-            'cart_count' => $this->ownedItems()->sum('quantity'),
-            'cart_merge' => $mergeSummary,
-        ]);
+        $cartCount = (int) $this->ownedItems()->sum('quantity');
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'cart_count' => $cartCount,
+                'cart_merge' => $mergeSummary,
+            ]);
+        }
+
+        return redirect()->route('cart.index')->with('success', $message);
     }
 
     private function ownedItems()

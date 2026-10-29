@@ -13,6 +13,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     @vite('resources/css/checkout/master.css')
+    @vite('resources/css/shop.css')
     @vite('resources/css/customer/product/cart.css')
     @vite('resources/js/lucide.min.js')
     @livewireStyles
@@ -111,18 +112,16 @@
                         <span class="badge wishlist-badge">3</span>
                     </button>
 
-                    <!-- السلة مع السعر -->
-                    <button class="cart-btn action-btn" id="cartToggle">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <!-- رابط السلة مع عدد المنتجات -->
+                    <a href="{{ route('cart.index') }}" class="cart-btn action-btn" aria-label="عرض سلة التسوق">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="9" cy="21" r="1" />
                             <circle cx="20" cy="21" r="1" />
                             <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
                         </svg>
-                        <span class="badge cart-count"id="cart-count">
-                            0 </span>
-                        <span class="cart-total">1,250 ر.س</span>
-                    </button>
+                        <span class="badge cart-count" id="cart-count">{{ $cartCount ?? 0 }}</span>
+                        <span class="cart-total">السلة</span>
+                    </a>
 
                     <!-- حساب المستخدم مع قائمة منسدلة -->
                     <div class="account-dropdown desktop-only" id="accountDropdown">
@@ -224,6 +223,7 @@
     @if (session('order_number'))<div role="status" class="container">تم تسجيل طلبك برقم {{ session('order_number') }}.</div>@endif
     @yield('content')
     @vite('resources/js/master.js')
+    @vite('resources/js/shop-cart.js')
     @vite('resources/js/customer/main.js')
     @livewireScripts
 
