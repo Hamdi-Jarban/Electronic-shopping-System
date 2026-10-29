@@ -6,6 +6,7 @@ use App\Http\Controllers\Customer\CartController;
 use App\Http\Controllers\Customer\ProductController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\InventoryController;
 use Illuminate\Support\Facades\Route;
 Route::get('/', [ProductController::class, 'index'])->name('index');
 Route::get('/products/{slug}', [ProductController::class, 'showSingleProduct'])->name('products.show');
@@ -14,6 +15,8 @@ Route::middleware(['auth', 'can:manage-products'])->prefix('admin')->name('admin
     Route::get('/products', [AdminProductController::class, 'index'])->name('products.index');
     Route::get('/products/create', [AdminProductController::class, 'create'])->name('products.create');
     Route::post('/products', [AdminProductController::class, 'store'])->name('products.store');
+    Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
+    Route::put('/inventory/{inventory}', [InventoryController::class, 'update'])->name('inventory.update');
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
     Route::post('/orders/{order}/cancel', [AdminOrderController::class, 'cancel'])->name('orders.cancel');
     Route::post('/orders/{order}/fulfill', [AdminOrderController::class, 'fulfill'])->name('orders.fulfill');

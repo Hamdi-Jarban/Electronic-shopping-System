@@ -7,6 +7,7 @@
     $defaultVariant = $product->variants->first();
     $featuredImage = $product->images->firstWhere('is_featured', true) ?? $product->images->first();
     $imageUrl = $featuredImage ? asset('storage/' . $featuredImage->image_path) : 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=900&h=900&fit=crop';
+    $defaultAvailable = (int) ($defaultVariant?->inventories?->sum(fn ($inventory) => max(0, $inventory->physical_qty - $inventory->reserved_qty)) ?? 0);
 @endphp
 <main class="shop-page" dir="rtl">
     <div class="shop-container">
@@ -43,13 +44,14 @@
                             @foreach ($product->variants as $variant)
                                 @php($attributes = is_array($variant->attributes) ? $variant->attributes : [])
                                 @php($variantLabel = collect($attributes)->map(fn ($value, $key) => $key . ': ' . $value)->implode('، '))
-                                <option value="{{ $variant->id }}" data-price="{{ $variant->price }}" data-compare="{{ $variant->compare_at_price }}" {{ $defaultVariant?->id === $variant->id ? 'selected' : '' }}>{{ $variantLabel ?: ('خيار ' . $loop->iteration) }} — {{ number_format($variant->price, 2) }} ر.س</option>
+                                <option value="{{ $variant->id }}" data-price="{{ $variant->price }}" data-compare="{{ $variant->compare_at_price }}" data-stock="{{ (int) $variant->inventories->sum(fn ($inventory) => max(0, $inventory->physical_qty - $inventory->reserved_qty)) }}" {{ $defaultVariant?->id === $variant->id ? 'selected' : '' }}>{{ $variantLabel ?: ('خيار ' . $loop->iteration) }} — {{ number_format($variant->price, 2) }} ر.س</option>
                             @endforeach
                         </select>
                         <div class="product-detail__price" aria-live="polite"><strong id="selected-price">{{ number_format($defaultVariant->price, 2) }} ر.س</strong><del id="selected-compare-price" @if(!$defaultVariant->compare_at_price || $defaultVariant->compare_at_price <= $defaultVariant->price) hidden @endif>{{ number_format($defaultVariant->compare_at_price ?? 0, 2) }} ر.س</del></div>
+                        <p id="variant-stock" class="product-stock {{ $defaultAvailable > 0 ? 'is-available' : 'is-unavailable' }}" role="status">{{ $defaultAvailable > 0 ? 'متوفر: ' . $defaultAvailable . ' قطعة' : 'نفد المخزون' }}</p>
                         <label class="shop-label" for="quantity">الكمية</label>
-                        <input id="quantity" class="shop-quantity" type="number" name="quantity" value="1" min="1" max="99" inputmode="numeric" required>
-                        <button class="shop-button shop-button--primary" type="submit">أضف إلى السلة</button>
+                        <input id="quantity" class="shop-quantity" type="number" name="quantity" value="1" min="1" max="{{ min(99, max(1, $defaultAvailable)) }}" inputmode="numeric" required>
+                        <button class="shop-button shop-button--primary" type="submit" {{ $defaultAvailable < 1 ? 'disabled' : '' }}>أضف إلى السلة</button>
                         <p class="cart-feedback" data-cart-feedback role="status" aria-live="polite"></p>
                     </form>
                 @else
@@ -84,6 +86,20 @@
             compare.hidden = compareValue <= Number(option.dataset.price);
             compare.textContent = `${compareValue.toFixed(2)} ر.س`;
         }
+        const stock = Number(option.dataset.stock || 0);
+        const stockMessage = document.getElementById('variant-stock');
+        const quantity = document.getElementById('quantity');
+        const submit = variantSelect.form?.querySelector('button[type="submit"]');
+        if (stockMessage) {
+            stockMessage.textContent = stock > 0 ? `متوفر: ${stock} قطعة` : 'نفد المخزون';
+            stockMessage.classList.toggle('is-available', stock > 0);
+            stockMessage.classList.toggle('is-unavailable', stock < 1);
+        }
+        if (quantity) {
+            quantity.max = Math.min(99, Math.max(1, stock));
+            if (Number(quantity.value) > stock && stock > 0) quantity.value = stock;
+        }
+        if (submit) submit.disabled = stock < 1;
     });
 </script>
 @endpush

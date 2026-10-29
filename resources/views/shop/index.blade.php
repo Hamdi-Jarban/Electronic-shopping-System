@@ -14,10 +14,11 @@
             <div class="products-grid">
                 @foreach ($products as $product)
                     @php
-                        $variant = $product->defaultVariant;
+                        $variant = $product->variants->first(fn ($candidate) => $candidate->inventories->sum(fn ($inventory) => max(0, $inventory->physical_qty - $inventory->reserved_qty)) > 0) ?? $product->defaultVariant;
                         $price = $variant?->price;
                         $oldPrice = $variant?->compare_at_price;
                         $image = $product->featureImage;
+                        $available = (int) ($variant?->inventories?->sum(fn ($inventory) => max(0, $inventory->physical_qty - $inventory->reserved_qty)) ?? 0);
                         $imageUrl = $image ? asset('storage/' . $image->image_path) : 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=640&h=640&fit=crop';
                         $discount = $oldPrice && $price && $oldPrice > $price ? round((($oldPrice - $price) / $oldPrice) * 100) : 0;
                     @endphp
@@ -31,13 +32,14 @@
                             <h2><a href="{{ route('products.show', $product->slug) }}">{{ $product->name }}</a></h2>
                             @if ($product->summary)<p class="product-card__summary">{{ \Illuminate\Support\Str::limit($product->summary, 90) }}</p>@endif
                             @if (($product->reviews_count ?? 0) > 0)<p class="product-card__rating" aria-label="تقييم {{ number_format($product->reviews_avg_rating ?? 0, 1) }} من 5">★ {{ number_format($product->reviews_avg_rating ?? 0, 1) }} <span>({{ $product->reviews_count }})</span></p>@endif
+                            <p class="product-stock {{ $available > 0 ? 'is-available' : 'is-unavailable' }}">{{ $available > 0 ? 'متوفر: ' . $available . ' قطعة' : 'نفد المخزون' }}</p>
                             <div class="product-card__price">
                                 @if ($price !== null)<strong>{{ number_format($price, 2) }} ر.س</strong>@else<strong>غير متاح</strong>@endif
                                 @if ($oldPrice && $price && $oldPrice > $price)<del>{{ number_format($oldPrice, 2) }} ر.س</del>@endif
                             </div>
                             <div class="product-card__actions">
                                 <a class="shop-button shop-button--secondary" href="{{ route('products.show', $product->slug) }}">عرض التفاصيل</a>
-                                @if ($variant)
+                                @if ($variant && $available > 0)
                                     <form class="add-to-cart-form" action="{{ route('cart.add') }}" method="POST" data-cart-form>
                                         @csrf<input type="hidden" name="variant_id" value="{{ $variant->id }}"><input type="hidden" name="quantity" value="1">
                                         <button class="shop-button shop-button--primary" type="submit">أضف للسلة</button>

@@ -16,7 +16,6 @@ class DatabaseSeeder extends Seeder
         $this->command->info('🚀 بدء إدخال البيانات باللغة العربية...');
         $this->command->info('⏳ هذه العملية قد تستغرق بضع دقائق...');
 
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
         $this->call([
             RolePermissionSeeder::class,
@@ -26,12 +25,11 @@ class DatabaseSeeder extends Seeder
             CouponSeeder::class,
             UserSeeder::class,
             ProductSeeder::class,
+            WarehouseInventorySeeder::class,
             CartSeeder::class,
             OrderSeeder::class,
-            InventoryMovementSeeder::class,
         ]);
 
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $this->command->info('✅ تم إدخال جميع البيانات بنجاح!');
         $this->command->info('📊 الإحصائيات:');

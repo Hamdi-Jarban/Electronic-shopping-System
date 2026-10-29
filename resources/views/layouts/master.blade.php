@@ -127,6 +127,9 @@
                     <div class="account-dropdown desktop-only" id="accountDropdown">
                         <button class="action-btn" id="accountBtn"><i data-lucide="user"></i></button>
                         <div class="account-menu">
+                            @can('manage-products')
+                                <a href="{{ route('admin.inventory.index') }}"><i data-lucide="package"></i> إدارة المخزون</a>
+                            @endcan
                             <a href="#"><i data-lucide="log-in"></i> تسجيل الدخول</a>
                             <a href="#"><i data-lucide="user-plus"></i> حساب جديد</a>
                             <div class="account-divider"></div>

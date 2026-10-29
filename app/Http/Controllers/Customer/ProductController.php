@@ -25,7 +25,8 @@ class ProductController extends Controller
         'brand' => function ($query) {
           return $query->select('id', 'name');
         },
-        'defaultVariant',
+        'defaultVariant.inventories',
+        'variants.inventories',
         'featureImage'
       ])
       ->withCount('reviews')
@@ -40,9 +41,15 @@ class ProductController extends Controller
     public function showSingleProduct($slug)
     {
         
-    $product = Product::query()->with(['brand:id,name,logo_url','variants','images'])
-    ->where('slug',$slug)->where('is_active',true)->firstOrFail();
-return view('shop.details',compact('product'));
+    $product = Product::query()
+        ->with(['brand:id,name,logo_url', 'variants.inventories', 'images'])
+        ->withCount('reviews')
+        ->withAvg('reviews', 'rating')
+        ->where('slug', $slug)
+        ->where('is_active', true)
+        ->firstOrFail();
+
+    return view('shop.details', compact('product'));
     }
 
     /**
