@@ -228,6 +228,7 @@
     @vite('resources/js/master.js')
     @vite('resources/js/shop-cart.js')
     @vite('resources/js/customer/main.js')
+    @stack('scripts')
     @livewireScripts
 
 

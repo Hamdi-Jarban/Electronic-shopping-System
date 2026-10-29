@@ -24,19 +24,61 @@ class CartController extends Controller
 
     public function index()
     {
-        $items = $this->ownedItems()->with('variant.product.featureImage')->get();
+        $items = $this->ownedItems()->with(['variant.product.featureImage', 'variant.inventories'])->get();
+        foreach ($items as $item) {
+            $item->available_quantity = $this->availableQuantity($item->variant);
+            $item->product_available = (bool) $item->variant?->product?->is_active;
+        }
+        $hasUnavailableItems = $items->contains(fn ($item) => !$item->product_available || $item->available_quantity < $item->quantity);
 
-        return view('cart.index', compact('items'));
+        return view('cart.index', compact('items', 'hasUnavailableItems'));
     }
 
     public function checkout()
     {
-        $items = $this->ownedItems()->with('variant.product')->get();
+        $items = $this->ownedItems()->with(['variant.product', 'variant.inventories'])->get();
         if ($items->isEmpty()) {
             return redirect()->route('cart.index')->with('error', 'السلة فارغة.');
         }
 
+        foreach ($items as $item) {
+            if (!$item->variant?->product?->is_active || $this->availableQuantity($item->variant) < $item->quantity) {
+                return redirect()->route('cart.index')->with('error', 'حدّث كميات المنتجات أو أزل المنتجات غير المتوفرة قبل إتمام الطلب.');
+            }
+        }
+
         return view('checkout.index', compact('items'));
+    }
+
+    public function update(Request $request, CartItem $item)
+    {
+        $ownedItem = $this->ownedItems()->whereKey($item->id)->with('variant.product')->firstOrFail();
+        $data = $request->validate(['quantity' => ['required', 'integer', 'min:1', 'max:99']]);
+        $available = $this->availableQuantity($ownedItem->variant);
+        if (!$ownedItem->variant?->product?->is_active || $available < 1 || $data['quantity'] > $available) {
+            $message = !$ownedItem->variant?->product?->is_active
+                ? 'هذا المنتج لم يعد متاحًا للبيع. أزله من السلة للمتابعة.'
+                : ($available < 1
+                    ? 'هذا المنتج غير متوفر حاليًا. أزله من السلة أو عد لاحقًا.'
+                    : 'الكمية المطلوبة تتجاوز المتاح حاليًا (' . $available . ').');
+            return $this->cartActionError($request, $message, ['available_quantity' => $available]);
+        }
+
+        $ownedItem->update(['quantity' => (int) $data['quantity']]);
+        return $this->cartActionSuccess($request, 'تم تحديث الكمية.', [
+            'item_id' => $ownedItem->id,
+            'quantity' => (int) $ownedItem->quantity,
+            'unit_price' => (float) $ownedItem->variant->price,
+            'available_quantity' => $available,
+        ]);
+    }
+
+    public function remove(Request $request, CartItem $item)
+    {
+        $ownedItem = $this->ownedItems()->whereKey($item->id)->firstOrFail();
+        $itemId = $ownedItem->id;
+        $ownedItem->delete();
+        return $this->cartActionSuccess($request, 'تمت إزالة المنتج من السلة.', ['item_id' => $itemId]);
     }
 
     public function add(Request $request)
@@ -112,6 +154,36 @@ class CartController extends Controller
         return Auth::check()
             ? CartItem::where('user_id', Auth::id())
             : CartItem::where('session_token', $this->sessionToken());
+    }
+
+    private function availableQuantity(?ProductVariant $variant): int
+    {
+        if (!$variant) {
+            return 0;
+        }
+
+        $inventories = $variant->relationLoaded('inventories')
+            ? $variant->inventories
+            : $variant->inventories()->get();
+
+        return (int) $inventories->sum(fn ($inventory) => max(0, $inventory->physical_qty - $inventory->reserved_qty));
+    }
+
+    private function cartActionSuccess(Request $request, string $message, array $extra = [])
+    {
+        $cartCount = (int) $this->ownedItems()->sum('quantity');
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => $message, 'cart_count' => $cartCount] + $extra);
+        }
+        return redirect()->route('cart.index')->with('success', $message);
+    }
+
+    private function cartActionError(Request $request, string $message, array $extra = [])
+    {
+        if ($request->expectsJson()) {
+            return response()->json(['success' => false, 'message' => $message] + $extra, 422);
+        }
+        return redirect()->route('cart.index')->with('error', $message);
     }
 
     /** Merge guest items without letting their combined quantity exceed current stock. */

@@ -23,6 +23,8 @@ Route::middleware(['auth', 'can:manage-products'])->prefix('admin')->name('admin
 });
 Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+Route::patch('/cart/{item}', [CartController::class, 'update'])->name('cart.update');
+Route::delete('/cart/{item}', [CartController::class, 'remove'])->name('cart.remove');
 Route::get('/checkout', [CartController::class, 'checkout'])->name('checkout.index');
 Route::post('/checkout', [OrderController::class, 'placeOrder'])->name('orders.store');
 require __DIR__.'/auth.php';
